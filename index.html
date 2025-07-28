@@ -3,6 +3,40 @@
   <head>
     <title>Saviour Notes</title>
     <meta charset="UTF-8" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background-color: #f4f4f4;
+        text-align: center;
+      }
+
+      h1 {
+        color: #333;
+      }
+
+      button {
+        padding: 10px 20px;
+        margin: 10px;
+        font-size: 16px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      #message, #output {
+        margin-top: 20px;
+        font-size: 18px;
+        color: #333;
+      }
+
+      footer {
+        margin-top: 40px;
+        color: #888;
+      }
+    </style>
   </head>
   <body>
     <h1>Hi, I'm Saviour</h1>
@@ -42,30 +76,47 @@
       "So fast and simple to use. I love it!" – Mark
     </blockquote>
 
-<button onclick="showWelcome()">Click Me</button>
-<p id="message"></p>
+    <!-- ✅ Buttons to trigger JS -->
+    <button onclick="showWelcome()">Click Me</button>
+    <button onclick="showMessage()">Show My Info</button>
+
+    <p id="message"></p>
+    <p id="output"></p>
+
     <footer>
       <p>&copy; 2025 Saviour. All rights reserved.</p>
     </footer>
 
-<!-- ✅ JavaScript at the bottom -->
- <script>
-  let name = prompt("What is your name?");
-  let age = prompt("How old are you?");
-  
-  alert("Hello " + name + "!");
+    <!-- ✅ JavaScript Section -->
+    <script>
+      let name = prompt("What is your name?");
+      let age = prompt("How old are you?");
+      
+      alert("Hello " + name + "!");
 
-  if (age >= 18) {
-    alert("You are old enough to use Saviour Notes.");
-  } else {
-    alert("Sorry, you are too young to use Saviour Notes.");
-  }
+      if (age >= 18) {
+        alert("You are old enough to use Saviour Notes.");
+      } else {
+        alert("Sorry, you are too young to use Saviour Notes.");
+      }
 
-  // 👇 Function for the Click Me button
-  function showWelcome() {
-    let user = prompt("What's your name?");
-   
-    document.getElementById("message").innerText =
-      "Welcome to Saviour Notes, " + user + "!";
-  }
-</script>
+      // Variables
+      let myName = "Saviour";
+      let myAge = 20;
+      let isStudent = true;
+
+      // Button 1: Show welcome message
+      function showWelcome() {
+        let user = prompt("What's your name?");
+        document.getElementById("message").innerText =
+          "Welcome to Saviour Notes, " + user + "!";
+      }
+
+      // Button 2: Show developer info
+      function showMessage() {
+        let info = "My name is " + myName + " and I am " + myAge + " years old.";
+        document.getElementById("output").innerText = info;
+      }
+    </script>
+  </body>
+</html>
