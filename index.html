@@ -36,6 +36,16 @@
         margin-top: 40px;
         color: #888;
       }
+
+      #noteList p {
+        text-align: left;
+        margin: 5px auto;
+        width: 80%;
+        background-color: white;
+        padding: 8px;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+      }
     </style>
   </head>
   <body>
@@ -83,6 +93,12 @@
     <p id="message"></p>
     <p id="output"></p>
 
+    <h2>Create a Note</h2>
+    <input type="text" id="noteInput" placeholder="Type your note here" />
+    <button onclick="addNote()">Add Note</button>
+
+    <div id="noteList"></div>
+
     <footer>
       <p>&copy; 2025 Saviour. All rights reserved.</p>
     </footer>
@@ -117,32 +133,40 @@
         let info = "My name is " + myName + " and I am " + myAge + " years old.";
         document.getElementById("output").innerText = info;
       }
-      // Button 2: Show developer info
-function showMessage() {
-  let info = "My name is " + myName + " and I am " + myAge + " years old.";
-  document.getElementById("output").innerText = info;
-}
 
-// Button 3: Add a note
-function addNote() {
-  const input = document.getElementById("noteInput");
-  const note = input.value;
+      // Button 3: Add a note (with localStorage)
+      function addNote() {
+        const input = document.getElementById("noteInput");
+        const note = input.value.trim();
 
-  if (note.trim() !== "") {
-    const noteList = document.getElementById("noteList");
-    const newNote = document.createElement("p");
-    newNote.innerText = "📝 " + note;
-    noteList.appendChild(newNote);
-    input.value = "";
-  } else {
-    alert("Please type something before adding a note.");
-  }
-}
+        if (note !== "") {
+          let notes = JSON.parse(localStorage.getItem("notes")) || [];
+          notes.push(note);
+          localStorage.setItem("notes", JSON.stringify(notes));
+          input.value = "";
+          displayNotes();
+        } else {
+          alert("Please type something before adding a note.");
+        }
+      }
+
+      // Display notes from localStorage
+      function displayNotes() {
+        const noteList = document.getElementById("noteList");
+        noteList.innerHTML = "";
+
+        let notes = JSON.parse(localStorage.getItem("notes")) || [];
+        notes.forEach((note) => {
+          const noteElement = document.createElement("p");
+          noteElement.innerText = "📝 " + note;
+          noteList.appendChild(noteElement);
+        });
+      }
+
+      // Show notes when page loads
+      window.onload = function () {
+        displayNotes();
+      };
     </script>
-<h2>Create a Note</h2>
-<input type="text" id="noteInput" placeholder="Type your note here" />
-<button onclick="addNote()">Add Note</button>
-
-<div id="noteList"></div>
-</body>
+  </body>
 </html>
