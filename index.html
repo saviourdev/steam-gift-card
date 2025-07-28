@@ -49,5 +49,13 @@
 <!-- ✅ JavaScript at the bottom -->
 <script>
   let name = prompt("What is your name?");
-  alert("Hello " + name + "! Welcome to Saviour Notes.");
+  let age = prompt("How old are you?");
+
+  alert("Hello " + name + "!");
+
+  if (age >= 18) {
+    alert("You are old enough to use Saviour Notes.");
+  } else {
+    alert("Sorry, you are too young to use Saviour Notes.");
+  }
 </script>
