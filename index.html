@@ -42,20 +42,30 @@
       "So fast and simple to use. I love it!" – Mark
     </blockquote>
 
+<button onclick="showWelcome()">Click Me</button>
+<p id="message"></p>
     <footer>
       <p>&copy; 2025 Saviour. All rights reserved.</p>
     </footer>
 
 <!-- ✅ JavaScript at the bottom -->
-<script>
+ <script>
   let name = prompt("What is your name?");
   let age = prompt("How old are you?");
-
+  
   alert("Hello " + name + "!");
 
   if (age >= 18) {
     alert("You are old enough to use Saviour Notes.");
   } else {
     alert("Sorry, you are too young to use Saviour Notes.");
+  }
+
+  // 👇 Function for the Click Me button
+  function showWelcome() {
+    let user = prompt("What's your name?");
+   
+    document.getElementById("message").innerText =
+      "Welcome to Saviour Notes, " + user + "!";
   }
 </script>
