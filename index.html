@@ -117,6 +117,32 @@
         let info = "My name is " + myName + " and I am " + myAge + " years old.";
         document.getElementById("output").innerText = info;
       }
+      // Button 2: Show developer info
+function showMessage() {
+  let info = "My name is " + myName + " and I am " + myAge + " years old.";
+  document.getElementById("output").innerText = info;
+}
+
+// Button 3: Add a note
+function addNote() {
+  const input = document.getElementById("noteInput");
+  const note = input.value;
+
+  if (note.trim() !== "") {
+    const noteList = document.getElementById("noteList");
+    const newNote = document.createElement("p");
+    newNote.innerText = "📝 " + note;
+    noteList.appendChild(newNote);
+    input.value = "";
+  } else {
+    alert("Please type something before adding a note.");
+  }
+}
     </script>
-  </body>
+<h2>Create a Note</h2>
+<input type="text" id="noteInput" placeholder="Type your note here" />
+<button onclick="addNote()">Add Note</button>
+
+<div id="noteList"></div>
+</body>
 </html>
