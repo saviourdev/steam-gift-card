@@ -1,192 +1,271 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Saviour Notes</title>
-    <meta charset="UTF-8" />
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        padding: 20px;
-        background-color: #f4f4f4;
-        text-align: center;
-      }
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Saviour Notes</title>
+  <style>
+    :root {
+      --bg-color: #f9fafb;
+      --text-color: #333;
+      --primary: #4caf50;
+      --card-bg: #fff;
+      --nav-bg: #4caf50;
+    }
 
-      h1 {
-        color: #333;
-      }
+    body.dark {
+      --bg-color: #121212;
+      --text-color: #f1f1f1;
+      --card-bg: #1e1e1e;
+      --nav-bg: #222;
+    }
 
-      button {
-        padding: 10px 20px;
-        margin: 10px;
-        font-size: 16px;
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-      }
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: var(--bg-color);
+      color: var(--text-color);
+      transition: 0.3s;
+    }
 
-      #message, #output {
-        margin-top: 20px;
-        font-size: 18px;
-        color: #333;
-      }
+    /* ✅ Navbar */
+    nav {
+      background: var(--nav-bg);
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
 
-      footer {
-        margin-top: 40px;
-        color: #888;
-      }
+    nav h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
 
-      #noteList p {
-        text-align: left;
-        margin: 5px auto;
-        width: 80%;
-        background-color: white;
-        padding: 8px;
-        border-radius: 5px;
-        border: 1px solid #ddd;
-      }
+    nav .contact-info {
+      font-size: 14px;
+    }
 
-      .delete-btn {
-        background-color: #f44336;
-        color: white;
-        border: none;
-        padding: 5px 10px;
-        margin-left: 10px;
-        border-radius: 3px;
-        cursor: pointer;
-        font-size: 14px;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Hi, I'm Saviour</h1>
-    <p>Aspiring Web Developer from Nigeria</p>
+    nav button {
+      background: white;
+      color: var(--primary);
+      border: none;
+      padding: 8px 15px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-left: 10px;
+    }
 
-    <h2>About Me</h2>
-    <p>
-      I am passionate about learning and committed to becoming a great web developer. 
-      I'm currently learning HTML, CSS, and how to build and publish websites.
-    </p>
+    nav button:hover {
+      background: #e0e0e0;
+    }
 
-    <h2>My Goals</h2>
-    <ul>
-      <li>Master HTML and CSS</li>
-      <li>Build beautiful websites</li>
-      <li>Work remotely for international companies</li>
-    </ul>
+    /* ✅ Sections */
+    section {
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+    }
 
-    <h2>Contact Me</h2>
-    <p>Email: <a href="mailto:savioursamuel071@gmail.com">savioursamuel071@gmail.com</a></p>
-    <p>WhatsApp: <a href="tel:+2348108462471">+234 810 846 2471</a></p>
+    h2 {
+      color: var(--primary);
+      margin-top: 30px;
+    }
 
-    <h2>SaviourNotes</h2>
-    <p>The smart way to take notes anytime, anywhere.</p>
-    <a href="#">Download Now</a>
+    /* ✅ Card layout */
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 15px 0;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+      transition: 0.3s;
+    }
 
-    <h2>Features</h2>
-    <ul>
-      <li>📝 Take quick notes with one click</li>
-      <li>🌐 Sync across devices</li>
-      <li>🔐 Secure and private</li>
-    </ul>
+    /* ✅ Buttons */
+    button, .delete-btn {
+      padding: 10px 15px;
+      margin: 5px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
 
-    <h2>What Users Say</h2>
-    <blockquote>
-      "I can't imagine life without SaviourNotes!" – Jane <br />
-      "So fast and simple to use. I love it!" – Mark
-    </blockquote>
+    button {
+      background-color: var(--primary);
+      color: white;
+    }
 
-    <!-- ✅ Buttons to trigger JS -->
-    <button onclick="showWelcome()">Click Me</button>
-    <button onclick="showMessage()">Show My Info</button>
+    button:hover {
+      background-color: #45a049;
+    }
 
-    <p id="message"></p>
-    <p id="output"></p>
+    .delete-btn {
+      background-color: #f44336;
+      color: white;
+    }
 
-    <h2>Create a Note</h2>
-    <input type="text" id="noteInput" placeholder="Type your note here" />
-    <button onclick="addNote()">Add Note</button>
+    .delete-btn:hover {
+      background-color: #d32f2f;
+    }
 
-    <div id="noteList"></div>
+    input[type="text"] {
+      padding: 10px;
+      width: 70%;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      margin-right: 10px;
+    }
 
-    <footer>
-      <p>&copy; 2025 Saviour. All rights reserved.</p>
-    </footer>
+    /* ✅ Notes List */
+    #noteList p {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      background: var(--card-bg);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    }
 
-    <!-- ✅ JavaScript Section -->
-    <script>
-      let name = prompt("What is your name?");
-      let age = prompt("How old are you?");
-      
-      alert("Hello " + name + "!");
+    /* ✅ Floating WhatsApp */
+    .whatsapp-float {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #25d366;
+      color: white;
+      border-radius: 50%;
+      padding: 15px;
+      font-size: 24px;
+      text-align: center;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: 0.3s;
+      z-index: 200;
+    }
+    .whatsapp-float:hover {
+      background: #20b954;
+    }
 
-      if (age >= 18) {
-        alert("You are old enough to use Saviour Notes.");
-      } else {
-        alert("Sorry, you are too young to use Saviour Notes.");
-      }
+    footer {
+      background: #333;
+      color: #fff;
+      text-align: center;
+      padding: 15px;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+  <!-- ✅ Navbar -->
+  <nav>
+    <h1>Saviour Notes</h1>
+    <div class="contact-info">
+      📧 <a href="mailto:savioursamuel071@gmail.com" style="color:white;">savioursamuel071@gmail.com</a> |
+      📱 <a href="tel:+2348108462471" style="color:white;">+234 810 846 2471</a>
+      <button onclick="toggleDarkMode()">🌙</button>
+    </div>
+  </nav>
 
-      // Variables
-      let myName = "Saviour";
-      let myAge = 20;
-      let isStudent = true;
+  <section>
+    <!-- About -->
+    <div class="card">
+      <h2>About Me</h2>
+      <p>I am passionate about learning and committed to becoming a great web developer. I'm currently learning HTML, CSS, and how to build and publish websites.</p>
+    </div>
 
-      // Button 1: Show welcome message
-      function showWelcome() {
-        let user = prompt("What's your name?");
-        document.getElementById("message").innerText =
-          "Welcome to Saviour Notes, " + user + "!";
-      }
+    <!-- Goals -->
+    <div class="card">
+      <h2>My Goals</h2>
+      <ul>
+        <li>Master HTML, CSS & JavaScript</li>
+        <li>Build beautiful, functional websites</li>
+        <li>Work remotely for international companies</li>
+      </ul>
+    </div>
 
-      // Button 2: Show developer info
-      function showMessage() {
-        let info = "My name is " + myName + " and I am " + myAge + " years old.";
-        document.getElementById("output").innerText = info;
-      }
+    <!-- Contact -->
+    <div class="card">
+      <h2>Contact Me</h2>
+      <p>📧 Email: <a href="mailto:savioursamuel071@gmail.com">savioursamuel071@gmail.com</a></p>
+      <p>📱 WhatsApp: <a href="tel:+2348108462471">+234 810 846 2471</a></p>
+    </div>
 
-      // Button 3: Add a note (with localStorage)
-      function addNote() {
-        const input = document.getElementById("noteInput");
-        const note = input.value.trim();
+    <!-- Notes Section -->
+    <div class="card">
+      <h2>Create a Note</h2>
+      <input type="text" id="noteInput" placeholder="Type your note here..." />
+      <button onclick="addNote()">➕ Add Note</button>
+      <div id="noteList"></div>
+    </div>
+  </section>
 
-        if (note !== "") {
-          let notes = JSON.parse(localStorage.getItem("notes")) || [];
-          notes.push(note);
-          localStorage.setItem("notes", JSON.stringify(notes));
-          input.value = "";
-          displayNotes();
-        } else {
-          alert("Please type something before adding a note.");
-        }
-      }
+  <!-- ✅ Floating WhatsApp -->
+  <a href="https://wa.me/2348108462471" target="_blank" class="whatsapp-float">💬</a>
 
-      // Display notes from localStorage
-      function displayNotes() {
-        const noteList = document.getElementById("noteList");
-        noteList.innerHTML = "";
+  <!-- ✅ Footer -->
+  <footer>
+    <p>&copy; 2025 Saviour. All rights reserved.</p>
+  </footer>
 
+  <script>
+    let myName = "Saviour";
+    let myAge = 20;
+
+    // ✅ Dark mode toggle
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark");
+    }
+
+    // ✅ Notes App
+    function addNote() {
+      const input = document.getElementById("noteInput");
+      const note = input.value.trim();
+
+      if (note !== "") {
         let notes = JSON.parse(localStorage.getItem("notes")) || [];
-        notes.forEach((note, index) => {
-          const noteElement = document.createElement("p");
-          noteElement.innerHTML = `📝 ${note} 
-            <button class="delete-btn" onclick="deleteNote(${index})">Delete</button>`;
-          noteList.appendChild(noteElement);
-        });
-      }
-
-      // Delete a note
-      function deleteNote(index) {
-        let notes = JSON.parse(localStorage.getItem("notes")) || [];
-        notes.splice(index, 1);
+        notes.push(note);
         localStorage.setItem("notes", JSON.stringify(notes));
+        input.value = "";
         displayNotes();
+      } else {
+        alert("Please type something before adding a note.");
       }
+    }
 
-      // Load notes on page load
-      window.onload = function () {
-        displayNotes();
-      };
-    </script>
-  </body>
+    function displayNotes() {
+      const noteList = document.getElementById("noteList");
+      noteList.innerHTML = "";
+
+      let notes = JSON.parse(localStorage.getItem("notes")) || [];
+      notes.forEach((note, index) => {
+        const noteElement = document.createElement("p");
+        noteElement.innerHTML = `📝 ${note} 
+          <button class="delete-btn" onclick="deleteNote(${index})">Delete</button>`;
+        noteList.appendChild(noteElement);
+      });
+    }
+
+    function deleteNote(index) {
+      let notes = JSON.parse(localStorage.getItem("notes")) || [];
+      notes.splice(index, 1);
+      localStorage.setItem("notes", JSON.stringify(notes));
+      displayNotes();
+    }
+
+    window.onload = function () {
+      displayNotes();
+    };
+  </script>
+</body>
 </html>
