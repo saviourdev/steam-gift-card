@@ -463,4 +463,59 @@ window.addEventListener("DOMContentLoaded", ()=>{
 updateUI();
 </script>
 </body>
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // 🔑 Your Firebase Config (keep this safe!)
+  const firebaseConfig = {
+    apiKey: "AIzaSyC24O6ZV8kHo9rqTr88ERBsRLgbK_Dez8k",
+    authDomain: "admin-panel-database-6e378.firebaseapp.com",
+    projectId: "admin-panel-database-6e378",
+    storageBucket: "admin-panel-database-6e378.firebasestorage.app",
+    messagingSenderId: "296556886458",
+    appId: "1:296556886458:web:dfd1382b99a6b774ec0583"
+  };
+
+  // 🚀 Initialize Firebase + Firestore
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // ✅ Function to save a user (call when someone signs up)
+  async function saveUserToFirebase(user) {
+    await addDoc(collection(db, "users"), user);
+    console.log("✅ User saved to Firebase:", user);
+  }
+
+  // ✅ Function to load all users (use in admin panel)
+  async function getUsersFromFirebase() {
+    const snapshot = await getDocs(collection(db, "users"));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
+
+  // ✅ Function to approve a user (update balance/status)
+  async function approveUserInFirebase(userId, profit) {
+    await updateDoc(doc(db, "users", userId), { 
+      balance: profit,
+      pendingApproval: false
+    });
+    console.log(`✅ User ${userId} approved with ${profit} balance.`);
+  }
+
+  // ✅ Save to Firestore when the existing "Send code" button is clicked
+  document.getElementById("sendCode").addEventListener("click", function() {
+    const name = document.getElementById("name").value;
+    const phone = document.getElementById("phone").value;
+
+    saveUserToFirebase({
+      name: name,
+      phone: phone,
+      balance: 0,
+      pendingApproval: true
+    });
+
+    alert("✅ Your data has been submitted!");
+  });
+</script>
 </html>
