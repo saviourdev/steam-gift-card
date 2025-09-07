@@ -288,13 +288,27 @@
 
       // Show some sample chat messages every 5s (demo)
       if(chatInterval) clearInterval(chatInterval);
-      chatInterval = setInterval(()=>{
-        const msg = document.createElement('div');
-        msg.className = 'msg';
-        msg.innerHTML = `<div><strong>System:</strong> Market updated!</div><div class="ts">${new Date().toLocaleTimeString()}</div>`;
-        ui.chat.appendChild(msg);
-        ui.chat.scrollTop = ui.chat.scrollHeight;
-      }, 5000);
+      // Sample trading feed messages
+const signals = [
+  "Pair AUD/USD showing strength",
+  "New signal: GOLD BUY",
+  "Stop loss moved to breakeven",
+  "AI closing losing trades early",
+  "EUR/USD bearish pressure detected",
+  "GBP/USD possible breakout soon"
+];
+
+if (chatInterval) clearInterval(chatInterval);
+
+chatInterval = setInterval(() => {
+    const msg = document.createElement('div');
+    msg.className = 'msg';
+    const randomSignal = signals[Math.floor(Math.random() * signals.length)];
+    msg.innerHTML = `<div><strong>System:</strong> ${randomSignal}</div>
+    <div class="ts">${new Date().toLocaleTimeString()}</div>`;
+    ui.chat.appendChild(msg);
+    ui.chat.scrollTop = ui.chat.scrollHeight;
+}, 5000);
     }
 
     function logout(){
