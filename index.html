@@ -14,14 +14,26 @@ h1{margin:0 0 20px;text-align:center}
 .table th,.table td{padding:10px;border-bottom:1px solid var(--border);text-align:left;font-size:14px}
 .btn{padding:6px 12px;border-radius:8px;border:none;cursor:pointer}
 .btn-approve{background:var(--accent);color:#052e13}
-.btn-reject{background:var(--danger);color:white}
 .badge{padding:4px 8px;border-radius:999px;font-size:12px;background:#0b0d12;color:var(--muted);border:1px solid var(--border)}
+.center{text-align:center}
+#loginCard input{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:#0b0d12;color:var(--text)}
+#loginCard button{margin-top:10px;width:100%;background:var(--accent);color:#052e13;font-weight:bold;padding:10px;border:none;border-radius:8px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Admin Panel — Approve Users</h1>
-  <div class="card">
+
+  <!-- Password login -->
+  <div class="card" id="loginCard">
+    <h2 class="center">Enter Admin Password</h2>
+    <input id="adminPassword" type="password" placeholder="Enter password">
+    <button id="loginBtn">Login</button>
+    <div id="loginError" class="center" style="color:var(--danger);margin-top:8px;display:none;">Invalid password!</div>
+  </div>
+
+  <!-- Table -->
+  <div class="card" id="tableCard" style="display:none">
     <table class="table" id="usersTable">
       <thead>
         <tr>
@@ -33,74 +45,83 @@ h1{margin:0 0 20px;text-align:center}
         </tr>
       </thead>
       <tbody id="usersBody">
-        <tr><td colspan="5" style="text-align:center;color:var(--muted)">Waiting for users...</td></tr>
+        <tr><td colspan="5" class="center" style="color:var(--muted)">Loading users...</td></tr>
       </tbody>
     </table>
   </div>
 </div>
 
-<!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ✅ Your Firebase config
+// ✅ Use the SAME Firebase config as index.html
 const firebaseConfig = {
-  apiKey: "AIzaSyC-wMpeSAbGGwmnRnu_ydWK8RgD4UsWfkU",
-  authDomain: "admin-html-a284e.firebaseapp.com",
-  projectId: "admin-html-a284e",
-  storageBucket: "admin-html-a284e.firebasestorage.app",
-  messagingSenderId: "416459872926",
-  appId: "1:416459872926:web:55f16b898b08a3217cf98f"
+  apiKey: "AIzaSyC24O6ZV8kHo9rqTr88ERBsRLgbK_Dez8k",
+  authDomain: "admin-panel-database-6e378.firebaseapp.com",
+  projectId: "admin-panel-database-6e378",
+  storageBucket: "admin-panel-database-6e378.firebasestorage.app",
+  messagingSenderId: "296556886458",
+  appId: "1:296556886458:web:dfd1382b99a6b774ec0583"
 };
 
-// 🚀 Initialize Firebase + Firestore
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ✅ Live listener — auto updates table when users collection changes
-onSnapshot(collection(db, "users"), (snapshot) => {
-  const tbody = document.getElementById("usersBody");
-  tbody.innerHTML = "";
+// 🔑 Simple admin password (change this!)
+const ADMIN_PASSWORD = "mySecret123";
 
-  if(snapshot.empty){
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--muted)">No users yet.</td></tr>`;
-    return;
+document.getElementById("loginBtn").addEventListener("click", () => {
+  const pass = document.getElementById("adminPassword").value;
+  if(pass === ADMIN_PASSWORD){
+    document.getElementById("loginCard").style.display = "none";
+    document.getElementById("tableCard").style.display = "block";
+    loadUsers();
+  } else {
+    document.getElementById("loginError").style.display = "block";
   }
-
-  snapshot.forEach(docSnap => {
-    const user = docSnap.data();
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${user.name}</td>
-      <td>${user.phone}</td>
-      <td>${(user.balance || 0).toFixed(2)} PLN</td>
-      <td>${user.pendingApproval ? '<span class="badge" style="background:#422006;color:#facc15">Pending</span>' : '<span class="badge" style="background:#052e13;color:#c9f6de">Approved</span>'}</td>
-      <td>
-        ${user.pendingApproval ? `<button class="btn btn-approve" data-id="${docSnap.id}" data-balance="${user.balance || 0}">Approve</button>` : ''}
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-
-  attachApproveButtons();
 });
 
-// Approve button logic
+// ✅ Load and watch users collection in realtime
+function loadUsers(){
+  const tbody = document.getElementById("usersBody");
+  onSnapshot(collection(db, "users"), (snapshot) => {
+    tbody.innerHTML = "";
+    if(snapshot.empty){
+      tbody.innerHTML = `<tr><td colspan="5" class="center" style="color:var(--muted)">No users yet</td></tr>`;
+      return;
+    }
+    snapshot.forEach(docSnap => {
+      const user = docSnap.data();
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${user.name}</td>
+        <td>${user.phone}</td>
+        <td>${(user.balance || 0).toFixed(2)} PLN</td>
+        <td>${user.pendingApproval ? '<span class="badge" style="background:#422006;color:#facc15">Pending</span>' : '<span class="badge" style="background:#052e13;color:#c9f6de">Approved</span>'}</td>
+        <td>
+          ${user.pendingApproval ? `<button class="btn btn-approve" data-id="${docSnap.id}" data-balance="${user.balance || 0}">Approve</button>` : ""}
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+    attachApproveButtons();
+  });
+}
+
+// ✅ Approve button function
 function attachApproveButtons(){
   document.querySelectorAll(".btn-approve").forEach(btn=>{
     btn.addEventListener("click", async ()=>{
       const id = btn.dataset.id;
       const currentBalance = Number(btn.dataset.balance);
-      const profit = prompt("Enter amount to credit to this user:", "100");
-      if(!profit || isNaN(profit)) return alert("Invalid amount.");
-
+      const profit = prompt("Enter amount to credit:", "100");
+      if(!profit || isNaN(profit)) return alert("Invalid amount");
       await updateDoc(doc(db, "users", id), {
         balance: currentBalance + Number(profit),
         pendingApproval: false
       });
-
-      alert("✅ User approved and credited!");
+      alert("✅ User approved!");
     });
   });
 }
