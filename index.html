@@ -7,13 +7,15 @@
 <style>
 :root { --bg:#0b0c10; --card:#111318; --muted:#a9b0b8; --text:#e9eef3; --accent:#22c55e; --danger:#ef4444; --border:#23262d; }
 body{margin:0;background:linear-gradient(160deg,#0b0c10,#0f1115 40%,#0b0c10);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-.wrap{max-width:960px;margin:24px auto;padding:20px}
+.wrap{max-width:1000px;margin:24px auto;padding:20px}
 h1{margin:0 0 20px;text-align:center}
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
 .table{width:100%;border-collapse:collapse}
 .table th,.table td{padding:10px;border-bottom:1px solid var(--border);text-align:left;font-size:14px}
-.btn{padding:6px 12px;border-radius:8px;border:none;cursor:pointer}
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:8px 12px;border-radius:8px;border:none;cursor:pointer}
 .btn-approve{background:var(--accent);color:#052e13}
+.btn-reject{background:var(--danger);color:#fff}
 .badge{padding:4px 8px;border-radius:999px;font-size:12px;background:#0b0d12;color:var(--muted);border:1px solid var(--border)}
 .center{text-align:center}
 #loginCard input{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:#0b0d12;color:var(--text)}
@@ -45,7 +47,7 @@ h1{margin:0 0 20px;text-align:center}
         </tr>
       </thead>
       <tbody id="usersBody">
-        <tr><td colspan="5" class="center" style="color:var(--muted)">Loading users...</td></tr>
+        <tr><td colspan="5" class="center" style="color:var(--muted)">Loading users…</td></tr>
       </tbody>
     </table>
   </div>
@@ -53,76 +55,98 @@ h1{margin:0 0 20px;text-align:center}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ✅ Use the SAME Firebase config as index.html
+/* === Firebase Config (replace with your own project if needed) === */
 const firebaseConfig = {
-  apiKey: "AIzaSyC24O6ZV8kHo9rqTr88ERBsRLgbK_Dez8k",
-  authDomain: "admin-panel-database-6e378.firebaseapp.com",
-  projectId: "admin-panel-database-6e378",
-  storageBucket: "admin-panel-database-6e378.firebasestorage.app",
-  messagingSenderId: "296556886458",
-  appId: "1:296556886458:web:dfd1382b99a6b774ec0583"
+  apiKey: "AIzaSyC-wMpeSAbGGwmnRnu_ydWK8RgD4UsWfkU",
+  authDomain: "admin-html-a284e.firebaseapp.com",
+  projectId: "admin-html-a284e",
+  storageBucket: "admin-html-a284e.firebasestorage.app",
+  messagingSenderId: "416459872926",
+  appId: "1:416459872926:web:55f16b898b08a3217cf98f"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔑 Simple admin password (change this!)
-const ADMIN_PASSWORD = "mySecret123";
+/* === Admin Password === */
+const ADMIN_PASSWORD = "myyeartoshine";
 
-document.getElementById("loginBtn").addEventListener("click", () => {
-  const pass = document.getElementById("adminPassword").value;
-  if(pass === ADMIN_PASSWORD){
-    document.getElementById("loginCard").style.display = "none";
-    document.getElementById("tableCard").style.display = "block";
-    loadUsers();
+/* === Login Handling === */
+const loginCard = document.getElementById("loginCard");
+const tableCard = document.getElementById("tableCard");
+const loginBtn = document.getElementById("loginBtn");
+const adminPassword = document.getElementById("adminPassword");
+const loginError = document.getElementById("loginError");
+
+function tryLogin(){
+  const typed = adminPassword.value.trim();
+  if(typed === ADMIN_PASSWORD){
+    loginCard.style.display = "none";
+    tableCard.style.display = "block";
+    startRealtime();
   } else {
-    document.getElementById("loginError").style.display = "block";
+    loginError.style.display = "block";
   }
-});
+}
+loginBtn.addEventListener("click", tryLogin);
+adminPassword.addEventListener("keydown",(e)=>{ if(e.key==="Enter") tryLogin(); });
 
-// ✅ Load and watch users collection in realtime
-function loadUsers(){
+/* === Load Users in Real-Time === */
+function startRealtime(){
   const tbody = document.getElementById("usersBody");
-  onSnapshot(collection(db, "users"), (snapshot) => {
+  onSnapshot(collection(db, "users"), (snap)=>{
     tbody.innerHTML = "";
-    if(snapshot.empty){
-      tbody.innerHTML = `<tr><td colspan="5" class="center" style="color:var(--muted)">No users yet</td></tr>`;
+    if(snap.empty){
+      tbody.innerHTML = `<tr><td colspan="5" class="center" style="color:var(--muted)">No users found.</td></tr>`;
       return;
     }
-    snapshot.forEach(docSnap => {
-      const user = docSnap.data();
+    snap.forEach(d=>{
+      const u = d.data();
+      const id = d.id;
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${user.name}</td>
-        <td>${user.phone}</td>
-        <td>${(user.balance || 0).toFixed(2)} PLN</td>
-        <td>${user.pendingApproval ? '<span class="badge" style="background:#422006;color:#facc15">Pending</span>' : '<span class="badge" style="background:#052e13;color:#c9f6de">Approved</span>'}</td>
+        <td>${u.name ?? "-"}</td>
+        <td>${u.phone ?? "-"}</td>
+        <td>${Number(u.balance || 0).toFixed(2)}</td>
+        <td>${u.pendingApproval ? '<span class="badge" style="background:#422006;color:#facc15">Pending</span>' : '<span class="badge" style="background:#052e13;color:#c9f6de">OK</span>'}</td>
         <td>
-          ${user.pendingApproval ? `<button class="btn btn-approve" data-id="${docSnap.id}" data-balance="${user.balance || 0}">Approve</button>` : ""}
+          ${u.pendingApproval ? `<button class="btn btn-approve" data-id="${id}">Approve</button>` : ""}
+          <button class="btn btn-reject" data-reject="${id}">Reject</button>
         </td>
       `;
       tbody.appendChild(tr);
     });
-    attachApproveButtons();
+
+    hookRowButtons();
   });
 }
 
-// ✅ Approve button function
-function attachApproveButtons(){
+/* === Buttons (Approve / Reject) === */
+function hookRowButtons(){
   document.querySelectorAll(".btn-approve").forEach(btn=>{
-    btn.addEventListener("click", async ()=>{
+    btn.onclick = async ()=>{
       const id = btn.dataset.id;
-      const currentBalance = Number(btn.dataset.balance);
-      const profit = prompt("Enter amount to credit:", "100");
-      if(!profit || isNaN(profit)) return alert("Invalid amount");
-      await updateDoc(doc(db, "users", id), {
-        balance: currentBalance + Number(profit),
+      const row = btn.closest("tr");
+      const balanceCell = row.children[2];
+      const currentBalance = Number(balanceCell.textContent);
+      const amount = prompt("Enter amount to credit:");
+      if(!amount || isNaN(amount)) return alert("Invalid number");
+      await updateDoc(doc(db,"users",id), {
+        balance: currentBalance + Number(amount),
         pendingApproval: false
       });
-      alert("✅ User approved!");
-    });
+      alert("✅ Approved & credited!");
+    };
+  });
+
+  document.querySelectorAll("[data-reject]").forEach(btn=>{
+    btn.onclick = async ()=>{
+      const id = btn.dataset.reject;
+      if(!confirm("Reject this user?")) return;
+      await updateDoc(doc(db,"users",id), { pendingApproval: false });
+      alert("🚫 Request rejected.");
+    };
   });
 }
 </script>
