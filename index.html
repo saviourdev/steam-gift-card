@@ -50,7 +50,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, collection, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  // ✅ Your Firebase config (same as index.html)
+  // ✅ Your Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyC24O6ZV8kHo9rqTr88ERBsRLgbK_Dez8k",
     authDomain: "admin-panel-database-6e378.firebaseapp.com",
@@ -88,12 +88,13 @@
     usersBody.innerHTML = "";
     users.forEach(user=>{
       const tr = document.createElement("tr");
+      const pending = user.pendingApproval;
       tr.innerHTML = `
         <td>${user.name || "-"}</td>
         <td>${user.phone || "-"}</td>
         <td>${user.balance || 0} PLN</td>
-        <td>${user.pendingApproval?.stake ? `${user.pendingApproval.stake} → ${user.pendingApproval.profit} PLN` : "Unknown"}</td>
-        <td><button data-id="${user.id}" data-profit="${user.pendingApproval?.profit || 0}">Approve</button></td>
+        <td>${pending?.stake ? `${pending.stake} → ${pending.profit} PLN` : "Unknown"}</td>
+        <td><button data-id="${user.id}" data-profit="${pending?.profit || 0}">Approve</button></td>
       `;
       usersBody.appendChild(tr);
     });
@@ -105,7 +106,7 @@
       const pending = [];
       snapshot.forEach(docSnap=>{
         const data = docSnap.data();
-        if(data.pendingApproval){
+        if(data.pendingApproval && data.pendingApproval !== false){
           pending.push({ id:docSnap.id, ...data });
         }
       });
