@@ -1,154 +1,133 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Admin Panel</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Panel - Approvals</title>
 <style>
-:root { --bg:#0b0c10; --card:#111318; --muted:#a9b0b8; --text:#e9eef3; --accent:#22c55e; --danger:#ef4444; --border:#23262d; }
-body{margin:0;background:linear-gradient(160deg,#0b0c10,#0f1115 40%,#0b0c10);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-.wrap{max-width:1000px;margin:24px auto;padding:20px}
-h1{margin:0 0 20px;text-align:center}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
-.table{width:100%;border-collapse:collapse}
-.table th,.table td{padding:10px;border-bottom:1px solid var(--border);text-align:left;font-size:14px}
-.controls{display:flex;gap:8px;flex-wrap:wrap}
-.btn{padding:8px 12px;border-radius:8px;border:none;cursor:pointer}
-.btn-approve{background:var(--accent);color:#052e13}
-.btn-reject{background:var(--danger);color:#fff}
-.badge{padding:4px 8px;border-radius:999px;font-size:12px;background:#0b0d12;color:var(--muted);border:1px solid var(--border)}
-.center{text-align:center}
-#loginCard input{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:#0b0d12;color:var(--text)}
-#loginCard button{margin-top:10px;width:100%;background:var(--accent);color:#052e13;font-weight:bold;padding:10px;border:none;border-radius:8px}
+  body { font-family: system-ui, sans-serif; background:#0b0c10; color:white; margin:0; padding:20px; }
+  h1 { text-align:center; margin-bottom:20px; }
+  table { width:100%; border-collapse: collapse; margin-top:10px; background:#111318; border:1px solid #23262d; border-radius:8px; overflow:hidden; }
+  th, td { padding:10px; border-bottom:1px solid #23262d; text-align:left; }
+  th { background:#1f2937; }
+  tr:last-child td { border-bottom:none; }
+  button { background:#22c55e; color:#052e13; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; }
+  button:disabled { background:#374151; color:#888; cursor:not-allowed; }
+  .container { max-width:900px; margin:auto; }
+  #loginScreen { max-width:400px; margin:100px auto; text-align:center; }
+  #loginScreen input { width:100%; padding:10px; border-radius:8px; border:1px solid #23262d; background:#111318; color:white; margin-bottom:10px; }
+  #loginScreen button { width:100%; background:#22c55e; color:#052e13; border:none; padding:10px; border-radius:8px; cursor:pointer; font-weight:bold; }
+  #loginError { color:#ef4444; margin-top:10px; display:none; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Admin Panel — Approve Users</h1>
+<div id="loginScreen">
+  <h1>Admin Login</h1>
+  <input type="password" id="adminPass" placeholder="Enter password">
+  <button id="loginBtn">Login</button>
+  <div id="loginError">❌ Incorrect password</div>
+</div>
 
-  <!-- Password login -->
-  <div class="card" id="loginCard">
-    <h2 class="center">Enter Admin Password</h2>
-    <input id="adminPassword" type="password" placeholder="Enter password">
-    <button id="loginBtn">Login</button>
-    <div id="loginError" class="center" style="color:var(--danger);margin-top:8px;display:none;">Invalid password!</div>
-  </div>
-
-  <!-- Table -->
-  <div class="card" id="tableCard" style="display:none">
-    <table class="table" id="usersTable">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Phone</th>
-          <th>Balance</th>
-          <th>Status</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="usersBody">
-        <tr><td colspan="5" class="center" style="color:var(--muted)">Loading users…</td></tr>
-      </tbody>
-    </table>
-  </div>
+<div class="container" id="adminPanel" style="display:none;">
+  <h1>Admin Panel — User Approvals</h1>
+  <table id="usersTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Phone</th>
+        <th>Balance</th>
+        <th>Pending Option</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="usersBody">
+      <tr><td colspan="5" style="text-align:center;color:#aaa;">Loading users...</td></tr>
+    </tbody>
+  </table>
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-/* === Firebase Config (replace with your own project if needed) === */
-const firebaseConfig = {
-  apiKey: "AIzaSyC-wMpeSAbGGwmnRnu_ydWK8RgD4UsWfkU",
-  authDomain: "admin-html-a284e.firebaseapp.com",
-  projectId: "admin-html-a284e",
-  storageBucket: "admin-html-a284e.firebasestorage.app",
-  messagingSenderId: "416459872926",
-  appId: "1:416459872926:web:55f16b898b08a3217cf98f"
-};
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+  // ✅ Your Firebase config (same as index.html)
+  const firebaseConfig = {
+    apiKey: "AIzaSyC24O6ZV8kHo9rqTr88ERBsRLgbK_Dez8k",
+    authDomain: "admin-panel-database-6e378.firebaseapp.com",
+    projectId: "admin-panel-database-6e378",
+    storageBucket: "admin-panel-database-6e378.firebasestorage.app",
+    messagingSenderId: "296556886458",
+    appId: "1:296556886458:web:dfd1382b99a6b774ec0583"
+  };
 
-/* === Admin Password === */
-const ADMIN_PASSWORD = "myyeartoshine";
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-/* === Login Handling === */
-const loginCard = document.getElementById("loginCard");
-const tableCard = document.getElementById("tableCard");
-const loginBtn = document.getElementById("loginBtn");
-const adminPassword = document.getElementById("adminPassword");
-const loginError = document.getElementById("loginError");
+  const usersBody = document.getElementById("usersBody");
+  const loginScreen = document.getElementById("loginScreen");
+  const adminPanel = document.getElementById("adminPanel");
+  const loginError = document.getElementById("loginError");
 
-function tryLogin(){
-  const typed = adminPassword.value.trim();
-  if(typed === ADMIN_PASSWORD){
-    loginCard.style.display = "none";
-    tableCard.style.display = "block";
-    startRealtime();
-  } else {
-    loginError.style.display = "block";
-  }
-}
-loginBtn.addEventListener("click", tryLogin);
-adminPassword.addEventListener("keydown",(e)=>{ if(e.key==="Enter") tryLogin(); });
+  // Simple password protection
+  document.getElementById("loginBtn").addEventListener("click", ()=>{
+    const pass = document.getElementById("adminPass").value;
+    if(pass === "saviour"){  // ✅ Your password
+      loginScreen.style.display = "none";
+      adminPanel.style.display = "block";
+      listenForUsers();
+    } else {
+      loginError.style.display = "block";
+    }
+  });
 
-/* === Load Users in Real-Time === */
-function startRealtime(){
-  const tbody = document.getElementById("usersBody");
-  onSnapshot(collection(db, "users"), (snap)=>{
-    tbody.innerHTML = "";
-    if(snap.empty){
-      tbody.innerHTML = `<tr><td colspan="5" class="center" style="color:var(--muted)">No users found.</td></tr>`;
+  function renderUsers(users){
+    if(users.length === 0){
+      usersBody.innerHTML = "<tr><td colspan='5' style='text-align:center;color:#aaa;'>No pending approvals</td></tr>";
       return;
     }
-    snap.forEach(d=>{
-      const u = d.data();
-      const id = d.id;
+    usersBody.innerHTML = "";
+    users.forEach(user=>{
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${u.name ?? "-"}</td>
-        <td>${u.phone ?? "-"}</td>
-        <td>${Number(u.balance || 0).toFixed(2)}</td>
-        <td>${u.pendingApproval ? '<span class="badge" style="background:#422006;color:#facc15">Pending</span>' : '<span class="badge" style="background:#052e13;color:#c9f6de">OK</span>'}</td>
-        <td>
-          ${u.pendingApproval ? `<button class="btn btn-approve" data-id="${id}">Approve</button>` : ""}
-          <button class="btn btn-reject" data-reject="${id}">Reject</button>
-        </td>
+        <td>${user.name || "-"}</td>
+        <td>${user.phone || "-"}</td>
+        <td>${user.balance || 0} PLN</td>
+        <td>${user.pendingApproval?.stake ? `${user.pendingApproval.stake} → ${user.pendingApproval.profit} PLN` : "Unknown"}</td>
+        <td><button data-id="${user.id}" data-profit="${user.pendingApproval?.profit || 0}">Approve</button></td>
       `;
-      tbody.appendChild(tr);
+      usersBody.appendChild(tr);
     });
+  }
 
-    hookRowButtons();
-  });
-}
-
-/* === Buttons (Approve / Reject) === */
-function hookRowButtons(){
-  document.querySelectorAll(".btn-approve").forEach(btn=>{
-    btn.onclick = async ()=>{
-      const id = btn.dataset.id;
-      const row = btn.closest("tr");
-      const balanceCell = row.children[2];
-      const currentBalance = Number(balanceCell.textContent);
-      const amount = prompt("Enter amount to credit:");
-      if(!amount || isNaN(amount)) return alert("Invalid number");
-      await updateDoc(doc(db,"users",id), {
-        balance: currentBalance + Number(amount),
-        pendingApproval: false
+  function listenForUsers(){
+    // Real-time listener
+    onSnapshot(collection(db, "users"), (snapshot)=>{
+      const pending = [];
+      snapshot.forEach(docSnap=>{
+        const data = docSnap.data();
+        if(data.pendingApproval){
+          pending.push({ id:docSnap.id, ...data });
+        }
       });
-      alert("✅ Approved & credited!");
-    };
-  });
+      renderUsers(pending);
+    });
+  }
 
-  document.querySelectorAll("[data-reject]").forEach(btn=>{
-    btn.onclick = async ()=>{
-      const id = btn.dataset.reject;
-      if(!confirm("Reject this user?")) return;
-      await updateDoc(doc(db,"users",id), { pendingApproval: false });
-      alert("🚫 Request rejected.");
-    };
+  async function approveUser(userId, profit){
+    await updateDoc(doc(db, "users", userId), {
+      balance: profit,
+      pendingApproval: false
+    });
+    alert(`✅ Approved user with ${profit} PLN`);
+  }
+
+  document.addEventListener("click", (e)=>{
+    if(e.target.matches("button[data-id]")){
+      const id = e.target.dataset.id;
+      const profit = Number(e.target.dataset.profit);
+      approveUser(id, profit);
+    }
   });
-}
 </script>
 </body>
 </html>
