@@ -1,134 +1,98 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Admin Panel - Approvals</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Admin Panel</title>
 <style>
-  body { font-family: system-ui, sans-serif; background:#0b0c10; color:white; margin:0; padding:20px; }
-  h1 { text-align:center; margin-bottom:20px; }
-  table { width:100%; border-collapse: collapse; margin-top:10px; background:#111318; border:1px solid #23262d; border-radius:8px; overflow:hidden; }
-  th, td { padding:10px; border-bottom:1px solid #23262d; text-align:left; }
-  th { background:#1f2937; }
-  tr:last-child td { border-bottom:none; }
-  button { background:#22c55e; color:#052e13; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; }
-  button:disabled { background:#374151; color:#888; cursor:not-allowed; }
-  .container { max-width:900px; margin:auto; }
-  #loginScreen { max-width:400px; margin:100px auto; text-align:center; }
-  #loginScreen input { width:100%; padding:10px; border-radius:8px; border:1px solid #23262d; background:#111318; color:white; margin-bottom:10px; }
-  #loginScreen button { width:100%; background:#22c55e; color:#052e13; border:none; padding:10px; border-radius:8px; cursor:pointer; font-weight:bold; }
-  #loginError { color:#ef4444; margin-top:10px; display:none; }
+body{background:#0b0c10;color:#e9eef3;font-family:sans-serif;margin:0;padding:20px;}
+h1{margin:0 0 16px;}
+.card{background:#111318;border:1px solid #23262d;border-radius:12px;padding:16px;margin-bottom:16px;}
+input,button{padding:8px 12px;border-radius:8px;border:1px solid #23262d;background:#0b0d12;color:#fff;}
+button{cursor:pointer;}
+.hidden{display:none;}
+table{width:100%;border-collapse:collapse;margin-top:10px;}
+td,th{border:1px solid #23262d;padding:8px;text-align:left;}
+.action-btn{padding:4px 8px;border-radius:6px;font-size:14px}
+.approve{background:#22c55e;color:#052e13}
+.reject{background:#ef4444;color:white}
 </style>
 </head>
 <body>
-<div id="loginScreen">
-  <h1>Admin Login</h1>
-  <input type="password" id="adminPass" placeholder="Enter password">
+<h1>🔒 Admin Login</h1>
+
+<div id="loginCard" class="card">
+  <label>Password</label>
+  <input type="password" id="adminPass">
   <button id="loginBtn">Login</button>
-  <div id="loginError">❌ Incorrect password</div>
 </div>
 
-<div class="container" id="adminPanel" style="display:none;">
-  <h1>Admin Panel — User Approvals</h1>
+<div id="adminPanel" class="card hidden">
+  <h2>👑 Admin Panel</h2>
   <table id="usersTable">
     <thead>
-      <tr>
-        <th>Name</th>
-        <th>Phone</th>
-        <th>Balance</th>
-        <th>Pending Option</th>
-        <th>Action</th>
-      </tr>
+      <tr><th>Name</th><th>Phone</th><th>Balance</th><th>Pending</th><th>Action</th></tr>
     </thead>
-    <tbody id="usersBody">
-      <tr><td colspan="5" style="text-align:center;color:#aaa;">Loading users...</td></tr>
-    </tbody>
+    <tbody></tbody>
   </table>
 </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+<script>
+const stateKey = "demo_safe_users";
+let users = JSON.parse(localStorage.getItem(stateKey) || "{}");
 
-  // ✅ Your Firebase config
-  const firebaseConfig = {
-    apiKey: "AIzaSyC24O6ZV8kHo9rqTr88ERBsRLgbK_Dez8k",
-    authDomain: "admin-panel-database-6e378.firebaseapp.com",
-    projectId: "admin-panel-database-6e378",
-    storageBucket: "admin-panel-database-6e378.firebasestorage.app",
-    messagingSenderId: "296556886458",
-    appId: "1:296556886458:web:dfd1382b99a6b774ec0583"
-  };
+function saveUsers(){ localStorage.setItem(stateKey, JSON.stringify(users)); }
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  const usersBody = document.getElementById("usersBody");
-  const loginScreen = document.getElementById("loginScreen");
-  const adminPanel = document.getElementById("adminPanel");
-  const loginError = document.getElementById("loginError");
-
-  // Simple password protection
-  document.getElementById("loginBtn").addEventListener("click", ()=>{
-    const pass = document.getElementById("adminPass").value;
-    if(pass === "saviour"){  // ✅ Your password
-      loginScreen.style.display = "none";
-      adminPanel.style.display = "block";
-      listenForUsers();
-    } else {
-      loginError.style.display = "block";
-    }
+function renderTable(){
+  const tbody = document.querySelector("#usersTable tbody");
+  tbody.innerHTML = "";
+  Object.values(users).forEach(user=>{
+    const tr = document.createElement("tr");
+    const pending = user.pendingApproval ? `${user.pendingApproval.stake}→${user.pendingApproval.profit}` : "-";
+    tr.innerHTML = `
+      <td>${user.name}</td>
+      <td>${user.phone}</td>
+      <td>${(user.balance||0).toFixed(2)} PLN</td>
+      <td>${pending}</td>
+      <td>
+        ${user.pendingApproval ? `
+          <button class="action-btn approve" onclick="approve('${user.phone}')">Approve</button>
+          <button class="action-btn reject" onclick="reject('${user.phone}')">Reject</button>` : "-"}
+      </td>`;
+    tbody.appendChild(tr);
   });
+}
 
-  function renderUsers(users){
-    if(users.length === 0){
-      usersBody.innerHTML = "<tr><td colspan='5' style='text-align:center;color:#aaa;'>No pending approvals</td></tr>";
-      return;
-    }
-    usersBody.innerHTML = "";
-    users.forEach(user=>{
-      const tr = document.createElement("tr");
-      const pending = user.pendingApproval;
-      tr.innerHTML = `
-        <td>${user.name || "-"}</td>
-        <td>${user.phone || "-"}</td>
-        <td>${user.balance || 0} PLN</td>
-        <td>${pending?.stake ? `${pending.stake} → ${pending.profit} PLN` : "Unknown"}</td>
-        <td><button data-id="${user.id}" data-profit="${pending?.profit || 0}">Approve</button></td>
-      `;
-      usersBody.appendChild(tr);
-    });
+function approve(phone){
+  const u = users[phone];
+  if(u && u.pendingApproval){
+    u.balance += u.pendingApproval.profit;
+    delete u.pendingApproval;
+    saveUsers();
+    renderTable();
+    alert(`✅ Approved ${phone}`);
   }
-
-  function listenForUsers(){
-    // Real-time listener
-    onSnapshot(collection(db, "users"), (snapshot)=>{
-      const pending = [];
-      snapshot.forEach(docSnap=>{
-        const data = docSnap.data();
-        if(data.pendingApproval && data.pendingApproval !== false){
-          pending.push({ id:docSnap.id, ...data });
-        }
-      });
-      renderUsers(pending);
-    });
+}
+function reject(phone){
+  const u = users[phone];
+  if(u && u.pendingApproval){
+    delete u.pendingApproval;
+    saveUsers();
+    renderTable();
+    alert(`❌ Rejected ${phone}`);
   }
+}
 
-  async function approveUser(userId, profit){
-    await updateDoc(doc(db, "users", userId), {
-      balance: profit,
-      pendingApproval: false
-    });
-    alert(`✅ Approved user with ${profit} PLN`);
+document.getElementById("loginBtn").addEventListener("click",()=>{
+  const pass = document.getElementById("adminPass").value;
+  if(pass === "myyeartoshineinjesusnameamen"){ // change this!
+    document.getElementById("loginCard").classList.add("hidden");
+    document.getElementById("adminPanel").classList.remove("hidden");
+    renderTable();
+  } else {
+    alert("Wrong password!");
   }
-
-  document.addEventListener("click", (e)=>{
-    if(e.target.matches("button[data-id]")){
-      const id = e.target.dataset.id;
-      const profit = Number(e.target.dataset.profit);
-      approveUser(id, profit);
-    }
-  });
+});
 </script>
 </body>
 </html>
