@@ -96,7 +96,7 @@ input,select,button{width:100%;padding:10px;border-radius:10px;border:1px solid 
       </div>
       <div class="center">
         <div class="small-muted">Balance</div>
-        <div id="balanceDisplay" style="font-size:18px;font-weight:700">0.00 PLN</div>
+        <div id="balanceDisplay" style="font-size:18px;font-weight:700">1000 PLN</div>
       </div>
     </div>
     <div style="margin-top:12px">
@@ -117,7 +117,7 @@ input,select,button{width:100%;padding:10px;border-radius:10px;border:1px solid 
       </div>
       <div>
         <div class="small-muted">Balance</div>
-        <div id="meBalance" style="font-weight:700;font-size:18px">0.00 PLN</div>
+        <div id="meBalance" style="font-weight:700;font-size:18px">1000 PLN</div>
       </div>
     </div>
     <button id="backHomeBtn" class="btn">⬅ Back to Home</button>
@@ -290,7 +290,7 @@ function updateLanguage(lang){
     }
     if(right){
       const balLbl = right.querySelector(".small-muted");
-      if(balLbl) balLbl.textContent = translations[lang].balance;
+      if(balLbl) balLbl.textContent = translations[lang].balance1000;
     }
   }
 
@@ -413,7 +413,7 @@ el('sendCode').addEventListener('click', ()=>{
     return;
   }
 
-  currentUser = users[phone] || { name, phone, balance:0 };
+  currentUser = users[phone] || { name, phone, balance:1000 };
   currentUser.pendingCode = String(Math.floor(100000 + Math.random()*900000));
   users[phone] = currentUser; saveUsers();
   el('codeSent').textContent = '✅ ' + translations[lang].sendCode;
