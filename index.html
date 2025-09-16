@@ -413,7 +413,7 @@ el('sendCode').addEventListener('click', ()=>{
     return;
   }
 
-  currentUser = users[phone] || { name, phone, balance:1000 };
+  currentUser = users[phone] || { name, phone, balance:0 };
   currentUser.pendingCode = String(Math.floor(100000 + Math.random()*900000));
   users[phone] = currentUser; saveUsers();
   el('codeSent').textContent = '✅ ' + translations[lang].sendCode;
