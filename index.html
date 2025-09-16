@@ -96,7 +96,7 @@ input,select,button{width:100%;padding:10px;border-radius:10px;border:1px solid 
       </div>
       <div class="center">
         <div class="small-muted">Balance</div>
-        <div id="balanceDisplay" style="font-size:18px;font-weight:700">1000 PLN</div>
+        <div id="balanceDisplay" style="font-size:18px;font-weight:700">0.00 PLN</div>
       </div>
     </div>
     <div style="margin-top:12px">
@@ -117,7 +117,7 @@ input,select,button{width:100%;padding:10px;border-radius:10px;border:1px solid 
       </div>
       <div>
         <div class="small-muted">Balance</div>
-        <div id="meBalance" style="font-weight:700;font-size:18px">1000 PLN</div>
+        <div id="meBalance" style="font-weight:700;font-size:18px">0.00 PLN</div>
       </div>
     </div>
     <button id="backHomeBtn" class="btn">⬅ Back to Home</button>
@@ -290,7 +290,7 @@ function updateLanguage(lang){
     }
     if(right){
       const balLbl = right.querySelector(".small-muted");
-      if(balLbl) balLbl.textContent = translations[lang].balance1000;
+      if(balLbl) balLbl.textContent = translations[lang].balance;
     }
   }
 
@@ -462,5 +462,65 @@ window.addEventListener("DOMContentLoaded", ()=>{
 
 updateUI();
 </script>
+
+<!-- ===== Firebase live-update script (ADDED) ===== -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // <-- your Firebase config (use the config you shared earlier) -->
+  const firebaseConfig = {
+    apiKey: "AIzaSyBwFCZBwoxkT3nYzqO1tS9l2FUum5ZFSK4",
+    authDomain: "balance-app-b9b17.firebaseapp.com",
+    projectId: "balance-app-b9b17",
+    storageBucket: "balance-app-b9b17.firebasestorage.app",
+    messagingSenderId: "178578219321",
+    appId: "1:178578219321:web:8342def76f387c9f02c8e8"
+  };
+
+  // init firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // listen to global/balance document
+  const balanceRef = doc(db, "global", "balance");
+
+  onSnapshot(balanceRef, (snap) => {
+    if (!snap.exists()) return; // no doc yet
+    const data = snap.data();
+    const val = (typeof data.value === 'number') ? data.value : Number(data.value) || 0;
+    const formatted = val.toFixed(2) + " PLN";
+
+    // update UI nodes (home + account)
+    const bd = document.getElementById("balanceDisplay");
+    const mb = document.getElementById("meBalance");
+    if (bd) bd.textContent = formatted;
+    if (mb) mb.textContent = formatted;
+
+    // update local session storage if present so your app's session keeps the balance
+    try {
+      const sessionKeyName = 'demo_safe_session';
+      const sess = localStorage.getItem(sessionKeyName);
+      if (sess) {
+        const obj = JSON.parse(sess);
+        obj.balance = val;
+        localStorage.setItem(sessionKeyName, JSON.stringify(obj));
+        // also update in-memory currentUser if available
+        try {
+          if (typeof currentUser !== 'undefined' && currentUser) {
+            currentUser.balance = val;
+          }
+        } catch(e){}
+        // call updateUI if defined (to re-render any parts that depend on currentUser)
+        try { if (typeof updateUI === 'function') updateUI(); } catch(e){}
+      }
+    } catch (e) {
+      console.error("Failed to update session after Firestore change:", e);
+    }
+  }, (err) => {
+    console.error("Firestore onSnapshot error:", err);
+  });
+</script>
+
 </body>
 </html>
