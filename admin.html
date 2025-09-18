@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head>
+  <title>Admin Panel</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      text-align: center;
+      padding: 50px;
+    }
+    .panel {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 400px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px;
+      width: 80%;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <h2>Admin Panel - Update Balance</h2>
+    <input id="amount" placeholder="Enter new balance" type="number" step="0.01"><br>
+    <button id="updateBtn">Update Balance</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // 🔑 Your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBwFCZBwoxkT3nYzqO1tS9l2FUum5ZFSK4",
+      authDomain: "balance-app-b9b17.firebaseapp.com",
+      projectId: "balance-app-b9b17",
+      storageBucket: "balance-app-b9b17.appspot.com",
+      messagingSenderId: "178578219321",
+      appId: "1:178578219321:web:8342def76f387c9f02c8e8"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // 🔗 Reference to your balance document
+    const balanceRef = doc(db, "global", "balance");
+
+    document.getElementById("updateBtn").addEventListener("click", async ()=>{
+      const amount = parseFloat(document.getElementById("amount").value);
+      if(isNaN(amount)) return alert("⚠️ Enter a valid number!");
+
+      try {
+        await setDoc(balanceRef, { value: amount });
+        alert("✅ Balance updated to " + amount.toFixed(2) + " PLN");
+      } catch (err) {
+        alert("❌ Error updating balance: " + err.message);
+      }
+    });
+  </script>
+</body>
+</html>
