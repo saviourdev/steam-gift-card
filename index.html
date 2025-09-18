@@ -189,19 +189,21 @@ const translations = {
         alertCountry:"Only Poland and United States allowed", alertMissing:"Enter name + phone", loginSuccess:"Login success",
         loggedOut:"Logged out", invalidCode:"Invalid code", yourCode:"Your code: ", optionHint:"Upload Steam gift card to receive",
         waitingApproval:"✅ Option selected — waiting for admin approval",
-        waMessage:(name,stake,profit)=>`Hello, my name is ${name}. I want to select the option ${stake} PLN → ${profit} PLN.`,
+        waMessage:(name,stake,profit)=>`Hello, my name is ${name}. I want to select the option ${stake} PLN → ${
+          profit} PLN.`,
         invalidPhonePL:"Enter a valid Polish number: +48 followed by 9 digits.",
         invalidPhoneUS:"Enter a valid U.S. number: +1 followed by 10 digits."
       },
   pl: { welcome:"Witamy — Rejestracja / Logowanie (tylko USA i Polska)", country:"Kraj", language:"Język",
         name:"Imię", phone:"Telefon", sendCode:"Wyślij kod", notSent:"Nie wysłano", enterCode:"Wpisz kod",
         finishLogin:"Zakończ logowanie", uploadCard:"Prześlij kartę", uploadDesc:"Tylko USA i Polska — tylko karty podarunkowe Steam.",
-        chooseMethod:"Wybierz metodę zarabiania:", balance:"Saldo", myAccount:"Moje konto", backHome:"⬅ Powrót do strony głównej",
+        chooseMethod:"Wybierz metodę zarabiania:", balance:"Saldo", myAccount:"Moje Konto", backHome:"⬅ Powrót do strony głównej",
         alertCountry:"Dozwolone tylko Polska i Stany Zjednoczone", alertMissing:"Wpisz imię i telefon", loginSuccess:"Logowanie zakończone sukcesem",
         loggedOut:"Wylogowano", invalidCode:"Nieprawidłowy kod", yourCode:"Twój kod: ", optionHint:"Prześlij kartę Steam, aby otrzymać",
         waitingApproval:"✅ Wybrano opcję — oczekiwanie na akceptację administratora",
         waMessage:(name,stake,profit)=>`Cześć, mam na imię ${name}. Chcę wybrać opcję ${stake} PLN → ${profit} PLN.`,
-        invalidPhonePL:"Wprowadź poprawny polski numer: +48 i 9 cyfr.", invalidPhoneUS:"Wprowadź poprawny numer USA: +1 i 10 cyfr."
+        invalidPhonePL:"Wprowadź poprawny polski numer: +48 i 9 cyfr.", 
+        invalidPhoneUS:"Wprowadź poprawny numer USA: +1 i 10 cyfr."
       }
 };
 
@@ -229,16 +231,36 @@ function updateLanguage(lang){
   el("codeSent").textContent = t.notSent;
   document.querySelector("#verifyRow label").textContent = t.enterCode;
   el("finishSignup").textContent = t.finishLogin;
-  // home & meCard labels
+
+  // Home & meCard labels
   const homeHeader = el("home").firstElementChild;
-  if(homeHeader){ const left=homeHeader.firstElementChild; const right=homeHeader.lastElementChild;
-    if(left){ const h1=left.querySelector("h1"); const desc=left.querySelector(".small-muted"); if(h1) h1.textContent=t.uploadCard; if(desc) desc.textContent=t.uploadDesc; }
-    if(right){ const balLbl=right.querySelector(".small-muted"); if(balLbl) balLbl.textContent=t.balance; }
+  if(homeHeader){ 
+    const left=homeHeader.firstElementChild; 
+    const right=homeHeader.lastElementChild;
+    if(left){ 
+      const h1=left.querySelector("h1"); 
+      const desc=left.querySelector(".small-muted"); 
+      if(h1) h1.textContent=t.uploadCard; 
+      if(desc) desc.textContent=t.uploadDesc; 
+    }
+    if(right){ 
+      const balLbl=right.querySelector(".small-muted"); 
+      if(balLbl) balLbl.textContent=t.balance; 
+    }
   }
+
   const chooseMethodEl = el("home").querySelector(".options")?.previousElementSibling;
   if(chooseMethodEl && chooseMethodEl.classList.contains("small-muted")) chooseMethodEl.textContent = t.chooseMethod;
-  const me = el("meCard"); if(me){ const meH1=me.querySelector("h1"); if(meH1) meH1.textContent=t.myAccount;
-    const labels = me.querySelectorAll(".small-muted"); if(labels[0]) labels[0].textContent=t.name; if(labels[1]) labels[1].textContent=t.phone; if(labels[2]) labels[2].textContent=t.balance; }
+
+  const me = el("meCard"); 
+  if(me){ 
+    const meH1=me.querySelector("h1"); if(meH1) meH1.textContent=t.myAccount;
+    const labels = me.querySelectorAll(".small-muted"); 
+    if(labels[0]) labels[0].textContent=t.name; 
+    if(labels[1]) labels[1].textContent=t.phone; 
+    if(labels[2]) labels[2].textContent=t.balance; 
+  }
+
   el("backHomeBtn").textContent=t.backHome;
   renderOptions();
 }
@@ -251,14 +273,24 @@ function updateUI(){
     el('meName').textContent=currentUser.name||"-"; el('mePhone').textContent=currentUser.phone||"-";
     el('meBalance').textContent=(currentUser.balance||0).toFixed(2)+" PLN";
     const existing = el('home').querySelector('.badge[data-wait]'); if(existing) existing.remove();
-    if(currentUser.pendingApproval){ const waitDiv=document.createElement("div"); waitDiv.className="badge"; waitDiv.setAttribute("data-wait","1"); waitDiv.style.background="#422006"; waitDiv.style.color="#facc15";
-      const lang=localStorage.getItem(langKey)||'en'; waitDiv.textContent=translations[lang].waitingApproval; el('home').prepend(waitDiv);
+    if(currentUser.pendingApproval){ 
+      const waitDiv=document.createElement("div"); 
+      waitDiv.className="badge"; waitDiv.setAttribute("data-wait","1"); 
+      waitDiv.style.background="#422006"; waitDiv.style.color="#facc15";
+      const lang=localStorage.getItem(langKey)||'en'; waitDiv.textContent=translations[lang].waitingApproval; 
+      el('home').prepend(waitDiv);
     }
   } else { show('gate'); hide('home'); hide('meCard'); hide('topBar'); }
 }
 
 // -------------------- Event Listeners --------------------
-el("country").addEventListener("change",()=>{ const country=el("country").value; localStorage.setItem(countryKey,country); if(country==="PL"){ el("lang").value="pl"; updateLanguage("pl"); } else if(country==="US"){ el("lang").value="en"; updateLanguage("en"); } updatePhoneForCountry(country); });
+el("country").addEventListener("change",()=>{ 
+  const country=el("country").value; 
+  localStorage.setItem(countryKey,country); 
+  if(country==="PL"){ el("lang").value="pl"; updateLanguage("pl"); } 
+  else if(country==="US"){ el("lang").value="en"; updateLanguage("en"); } 
+  updatePhoneForCountry(country); 
+});
 el("lang").addEventListener("change",()=>{ updateLanguage(el("lang").value); });
 
 el('sendCode').addEventListener('click',()=>{
@@ -267,7 +299,6 @@ el('sendCode').addEventListener('click',()=>{
   if(!name||!phone){ alert(translations[lang].alertMissing); return; }
   if(!isValidPhone(country,phone)){ alert(country==="PL"?translations[lang].invalidPhonePL:translations[lang].invalidPhoneUS); return; }
   currentUser = users[phone]||{name,phone,balance:0};
-  // generate verification code
   currentUser.pendingCode = String(Math.floor(100000 + Math.random() * 900000));
   users[phone] = currentUser; saveUsers();
   el('codeSent').textContent = '✅ ' + translations[lang].sendCode;
@@ -343,8 +374,6 @@ onSnapshot(balanceRef, (snap)=>{
   const formatted = val.toFixed(2)+" PLN";
   el('balanceDisplay').textContent = formatted;
   el('meBalance').textContent = formatted;
-
-  // update session
   if(currentUser){
     currentUser.balance = val;
     saveSession();
