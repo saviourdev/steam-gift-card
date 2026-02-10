@@ -1,195 +1,274 @@
 <!DOCTYPE html>
-<html lang="ms">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dompet Sebenar — REAL</title>
+<title>Wallet Real — CLP</title>
+
 <style>
-  :root{
-    --bg:#fafafa; --card:#007BFF; --muted:#777; --panel:#fff; --accent:#0b6ef7;
-    --radius:14px; --pad:14px;
-  }
-  html,body{height:100%; margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial; background:var(--bg); color:#111;}
-  .container { background: #fff; padding: 30px; border-radius: 10px; width: 320px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin:20px auto; }
-  input, select, button { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ccc; }
-  button { background: #007BFF; color: white; border: none; cursor: pointer; }
-  button:hover { background: #0056b3; }
-  .error { color: red; font-size: 0.9em; margin-bottom: 10px; }
-  .app{max-width:900px; margin:20px auto; padding:12px; display:none;}
-  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-  header .user{display:flex;gap:10px;align-items:center}
-  .avatar{width:40px;height:40px;border-radius:999px;background:linear-gradient(135deg,#5df,#3af);}
-  h1{font-size:1rem;margin:0}
-  .card{background:var(--card); color:white; border-radius:var(--radius); padding:18px; box-shadow:0 6px 18px rgba(0,0,0,0.08); position:relative}
-  .phone{position:absolute;right:16px;top:12px;font-size:0.9rem;opacity:0.95}
-  .balance-row{display:flex;align-items:center;gap:10px;justify-content:space-between}
-  .balance{font-weight:700;font-size:1.6rem}
-  .eye{background:rgba(255,255,255,0.12);padding:8px;border-radius:10px;cursor:pointer}
-  .actions{display:flex;gap:12px;margin:14px 0;justify-content:space-between}
-  .action{flex:1;text-align:center;padding:12px;border-radius:12px;cursor:pointer;font-weight:600;background:#0b6ef7;color:white;}
-  .grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
-  @media(min-width:720px){ .grid{grid-template-columns:320px 1fr} }
-  .panel{background:var(--panel);padding:12px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
-  .muted{color:var(--muted);font-size:0.9rem}
-  .modal-back{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:none;align-items:flex-end;justify-content:center;padding:20px;}
-  .modal{background:white;border-radius:14px;padding:14px;min-width:300px;max-width:720px;}
-  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;background:#111;color:white;padding:8px 12px;border-radius:10px;display:none}
+:root{
+  --bg:#fafafa; --card:#0b6ef7; --radius:14px; --panel:#fff; --muted:#777;
+}
+body{margin:0;font-family:Inter,system-ui,Arial;background:var(--bg)}
+.container{background:#fff;padding:30px;width:320px;margin:40px auto;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,0.1)}
+input,button{width:100%;padding:12px;margin-bottom:12px;border-radius:8px;border:1px solid #ccc}
+button{background:#0b6ef7;color:#fff;border:none;font-weight:700;cursor:pointer}
+.app{max-width:900px;margin:20px auto;padding:12px;display:none}
+.card{background:var(--card);color:#fff;border-radius:var(--radius);padding:20px}
+.balance{font-size:1.8rem;font-weight:800}
+.actions{display:flex;gap:12px;margin:14px 0}
+.action{flex:1;background:#0b6ef7;color:#fff;text-align:center;padding:12px;border-radius:12px;cursor:pointer;font-weight:700}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.panel{background:var(--panel);padding:14px;border-radius:12px}
+.tx-list{max-height:360px;overflow:auto}
+.tx{display:flex;justify-content:space-between;padding:10px;background:#f7f7f7;border-radius:8px;margin-bottom:8px}
+.muted{color:var(--muted);font-size:.85rem}
+.modal-back{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center}
+.modal{background:#fff;padding:20px;border-radius:14px;width:340px}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:10px 16px;border-radius:10px;display:none}
+hr{border:none;border-top:1px solid #eee;margin:10px 0}
 </style>
 </head>
+
 <body>
-<select id="langSelect">
-  <option value="ms" selected>Bahasa Melayu</option>
-  <option value="en">English</option>
-</select>
 
-<div class="container" id="signupContainer">
-  <h2>Daftar Akaun</h2>
-  <div class="error" id="error"></div>
-  <form id="signupForm">
-    <input type="text" id="name" placeholder="Nama penuh" required>
-    <select id="country" required>
-      <option value="Malaysia">Malaysia</option>
-    </select>
-    <input type="tel" id="phone" placeholder="Nombor telefon (+60)" required>
-    <button type="submit">Daftar</button>
-  </form>
+<div class="container" id="signup">
+  <h2>Register</h2>
+  <input id="name" placeholder="Full name">
+  <input id="phone" placeholder="Phone number">
+  <button id="signupBtn">Register</button>
 </div>
-
-<div class="container" id="otpContainer" style="display:none;">
-  <h2>Masukkan Kod Pengesahan</h2>
-  <p id="otpMessage"></p>
-  <input type="text" id="otpInput" placeholder="Masukkan kod" required>
-  <button id="verifyBtn">Sahkan</button>
-  <div class="error" id="otpError"></div>
-</div>
-
-<div class="app" id="dashboardApp">
-  <header>
-    <div class="user">
-      <div class="avatar"></div>
-      <div>
-        <div class="muted">Selamat datang</div>
-        <h1 id="username">Pengguna</h1>
-      </div>
-    </div>
-    <div><button id="logoutBtn">Log Keluar</button></div>
-  </header>  
-
-  <section class="card">
-    <div class="phone"><span id="walletPhone">+60</span></div>
-    <div class="balance-row">
-      <div>
-        <div class="muted">Baki Dompet</div>
-        <div class="balance" id="balanceDisplay">RM <span id="balanceAmount">0.00</span></div>
-      </div>
-      <div><div class="eye" id="toggleEye">👁️</div></div>
-    </div>
-  </section>  
+<button id="logoutBtn" style="margin:12px 0;background:#eee;color:#111;font-weight:700">
+  Logout
+</button>
+<div class="app" id="app">
+  <div class="card">
+    <div>Wallet balance</div>
+    <div class="balance" id="balance">0 CLP</div>
+  </div>
 
   <div class="actions">
-    <div class="action" id="withdrawBtn">Keluarkan</div>
-    <div class="action" id="fundBtn">Tambah Dana</div>
-    <div class="action" id="billsBtn">Bayar Bil</div>
-  </div>  
+    <div class="action" id="transferBtn">Transfer</div>
+    <div class="action" id="withdrawBtn">Withdraw</div>
+    <div class="action" id="billsBtn">Pay Bills</div>
+  </div>
 
   <div class="grid">
     <div class="panel">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div class="muted">Transaksi Terkini</div>
-          <div style="font-weight:700">Senarai Transaksi</div>
-        </div>
-        <div><button class="btn-secondary" id="clearTx">Padam</button></div>
-      </div>
+      <strong>Transaction History</strong>
       <div class="tx-list" id="txList"></div>
     </div>
-
     <div class="panel">
-      <div class="stat"><strong>Butiran Akaun</strong><div class="muted">Tahap 1 • Disahkan</div></div>
-      <hr>
-      <div class="stat"><strong>Tindakan Akaun</strong><div class="muted">Klik mana-mana tindakan di atas untuk mencuba.</div></div>
-      <hr>
-      <div class="stat"><strong>Bantuan</strong><div class="muted">Jangan kongsi maklumat anda dengan sesiapa.</div></div>
-    </div>
-
-    <div class="panel">
-      <div class="stat"><strong>Pelan Pelaburan</strong></div>
-      <hr>
-      <label for="investmentSelect" class="muted">Pilih pelan:</label>
-      <select id="investmentSelect">
-        <option value="" selected disabled>-- Pilih pelan --</option>
-        <option value="800">RM800 → Untung RM1700</option>
-        <option value="1700">RM1700 → Untung RM3300</option>
-        <option value="3300">RM3300 → Untung RM6500</option>
-      </select>
-      <div id="selectedProfit" class="muted" style="font-weight:700">Pelan dipilih: tiada</div>
+      <strong>Account Info</strong>
+      <p class="muted">Level 4 • Verified</p>
+      <p class="muted">Do not share your details</p>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast">Disimpan</div>
+<div class="modal-back" id="modalBack">
+  <div class="modal" id="modal"></div>
+</div>
+
+<div class="toast" id="toast">Saved</div>
 
 <script>
-const telegramLink = "https://t.me/jtu7p";
-const signupForm = document.getElementById('signupForm');
-const errorDiv = document.getElementById('error');
-const otpContainer = document.getElementById('otpContainer');
-const signupContainer = document.getElementById('signupContainer');
-const otpMessage = document.getElementById('otpMessage');
-const otpError = document.getElementById('otpError');
-let generatedOTP = null;
-let userData = null;
+const CLP_TO_PLN = 0.0046;
+const ZANGI_LINK = "https://services.zangi.com/dl/conversation/1093014713";
+let balance = 30500000;
+const $ = id => document.getElementById(id);
+const fmtCLP = n => n.toLocaleString('es-CL');
+const convertToPLN = clp => (clp * CLP_TO_PLN).toFixed(2);
+let tx = [];
 
-// Malaysia phone pattern: +60XXXXXXXXX or 01XXXXXXXX
-function isValidMY(phone) {
-  const regex = /^(?:\+?60|0)[1-9]\d{7,8}$/;
-  return regex.test(phone);
+function showToast(msg){
+  $('toast').textContent = msg;
+  $('toast').style.display = 'block';
+  setTimeout(()=> $('toast').style.display='none',2000);
+}
+let generatedOTP = null;
+
+$('signupBtn').onclick = () => {
+  const name = $('name').value.trim();
+  const phone = $('phone').value.trim();
+
+  if (!name || !phone) {
+    showToast('Enter name and phone');
+    return;
+  }
+
+  generatedOTP = Math.floor(100000 + Math.random() * 900000);
+
+  openModal(`
+    <h3>OTP Verification</h3>
+    <p class="muted">Demo OTP (shown for testing):</p>
+    <strong style="font-size:20px">${generatedOTP}</strong>
+    <input id="otpInput" type="number" placeholder="Enter OTP">
+    <button id="verifyOtp">Verify</button>
+    <button onclick="closeModal()" style="background:#eee;color:#111">Cancel</button>
+  `);
+
+  $('verifyOtp').onclick = () => {
+    const entered = Number($('otpInput').value);
+
+    if (entered === generatedOTP) {
+      closeModal();
+      $('signup').style.display = 'none';
+      $('app').style.display = 'block';
+      renderBalance();
+      renderTx();
+      showToast('Login successful');
+      generatedOTP = null;
+    } else {
+      showToast('Invalid OTP');
+    }
+  };
+};
+
+function renderBalance(){
+  $('balance').textContent = fmtCLP(balance) + ' CLP';
 }
 
-signupForm.addEventListener('submit', function(e) {
-  e.preventDefault();
-  errorDiv.textContent = '';
-  const name = document.getElementById('name').value.trim();
-  const country = document.getElementById('country').value;
-  const phone = document.getElementById('phone').value.trim();
-  if (name.length < 2) return errorDiv.textContent = "Sila masukkan nama penuh yang sah.";
-  if (country !== "Malaysia") return errorDiv.textContent = "Hanya Malaysia dibenarkan.";
-  if (!isValidMY(phone)) return errorDiv.textContent = "Nombor telefon Malaysia tidak sah.";
-  
-  userData = { name, country, phone };
-  generatedOTP = Math.floor(100000 + Math.random() * 900000);
-  otpMessage.textContent = `Kod pengesahan dihantar ke ${phone}. (OTP: ${generatedOTP})`;
-  signupContainer.style.display = 'none';
-  otpContainer.style.display = 'block';
-});
+function renderTx(){
+  const list = $('txList'); 
+  list.innerHTML='';
+  tx.slice().reverse().forEach(t=>{
+    const d=document.createElement('div'); 
+    d.className='tx';
+    d.innerHTML=`
+      <div>
+        <strong>${t.type}</strong>
+        <div class="muted">${t.name} • ${t.account}</div>
+        <div class="muted">${t.date}</div>
+      </div>
+      <div><strong>- ${fmtCLP(t.amount)} CLP</strong></div>`;
+    list.appendChild(d);
+  });
+}
 
-document.getElementById('verifyBtn').addEventListener('click', function() {
-  otpError.textContent = '';
-  const enteredOTP = document.getElementById('otpInput').value.trim();
-  if (enteredOTP === generatedOTP.toString()) {
-    otpContainer.style.display = 'none';
-    document.getElementById('dashboardApp').style.display = 'block';
-    document.getElementById('username').textContent = userData.name;
-    document.getElementById('walletPhone').textContent = userData.phone;
-  } else {
-    otpError.textContent = "Kod tidak sah. Cuba lagi.";
+function openModal(html){
+  $('modal').innerHTML=html; 
+  $('modalBack').style.display='flex';
+}
+function closeModal(){
+  $('modalBack').style.display='none';
+}
+
+$('withdrawBtn').onclick = () => {
+  openModal(`
+    <h3>Withdraw</h3>
+    <input id="amount" type="number" placeholder="Add amount (CLP)">
+    <div id="convert" class="muted">Converted: 0 zł</div>
+    <button id="done">Done</button>
+    <button onclick="closeModal()" style="background:#eee;color:#111">Close</button>
+  `);
+  $('amount').oninput=()=>{
+    $('convert').textContent='Converted: '+convertToPLN(Number($('amount').value||0))+' zł';
+  };
+  $('done').onclick=()=>{
+    showToast('Withdrawal submitted'); 
+    closeModal();
+  };
+};
+
+$('billsBtn').onclick = () => {
+  openModal(`
+    <h3>Pay Bills</h3>
+    <input id="bill" placeholder="Bill name">
+    <input id="bamt" type="number" placeholder="Amount (CLP)">
+    <button id="pay">Done</button>
+    <button onclick="closeModal()" style="background:#eee;color:#111">Close</button>
+  `);
+  $('pay').onclick=()=>{
+    const amt=Number($('bamt').value);
+    tx.push({
+      type:'Bill Payment',
+      name:$('bill').value,
+      account:'—',
+      amount:amt,
+      date:new Date().toDateString()
+    });
+    balance-=amt; 
+    renderBalance(); 
+    renderTx(); 
+    showToast('Bill paid'); 
+    closeModal();
+  };
+};
+
+$('transferBtn').onclick = () => {
+  openModal(`
+    <h3>Bank Transfer</h3>
+    <input id="tname" placeholder="Account holder name">
+    <input id="tacc" placeholder="Account number">
+    <input id="tamt" type="number" placeholder="Amount (CLP)">
+    <button id="send">Done</button>
+    <button onclick="closeModal()" style="background:#eee;color:#111">Close</button>
+  `);
+
+  $('send').onclick = () => {
+    const name=$('tname').value.trim();
+    const acc=$('tacc').value.trim();
+    const amt=Number($('tamt').value||0);
+    if(!name||!acc||amt<=0){ 
+      showToast('Fill all fields'); 
+      return; 
+    }
+
+    const feePLN = amt>=20000 ? 1000 : amt>=10000 ? 500 : 0;
+
+    openModal(`
+      <h3>Confirm Transfer</h3>
+      <div class="muted">To: <strong>${name}</strong></div>
+      <div class="muted">Account: <strong>${acc}</strong></div>
+      <hr>
+      <div class="muted">Amount: <strong>${fmtCLP(amt)} CLP</strong></div>
+      <div class="muted">Service fee: <strong>${feePLN} PLN</strong></div>
+      <hr>
+      <button id="confirm">Confirm</button>
+      <button onclick="closeModal()" style="background:#eee;color:#111">Cancel</button>
+    `);
+
+    $('confirm').onclick = () => {
+      tx.push({
+        type:'Transfer',
+        name,
+        account:acc,
+        amount:amt,
+        date:new Date().toDateString()
+      });
+      balance-=amt; 
+      renderBalance(); 
+      renderTx();
+      window.open(ZANGI_LINK, '_blank');
+      closeModal();
+    };
+  };
+};
+
+(function preloadTx(){
+  const amounts=[10000,20000,5000,100000,500000];
+  for(let i=1;i<=55;i++){
+    tx.push({
+      type:'Transfer',
+      name:'Client '+i,
+      account:'ACC'+(100000+i),
+      amount:amounts[i%amounts.length],
+      date:new Date(2026,1,(i%15)+1).toDateString()
+    });
   }
-});
+})();
+$('logoutBtn').onclick = () => {
+  $('app').style.display = 'none';
+  $('signup').style.display = 'block';
 
-// clickable actions
-document.getElementById('fundBtn').addEventListener('click', ()=>window.open(telegramLink, '_blank'));
-document.getElementById('billsBtn').addEventListener('click', ()=>window.open(telegramLink, '_blank'));
-document.getElementById('withdrawBtn').addEventListener('click', ()=>window.open(telegramLink, '_blank'));
+  $('name').value = '';
+  $('phone').value = '';
+  generatedOTP = null;
 
-document.getElementById('investmentSelect').addEventListener('change', ()=>{
-  const value = document.getElementById('investmentSelect').value;
-  let planText = '';
-  if(value === '800'){ planText = 'RM800 → Untung RM1600'; }
-  else if(value === '1600'){ planText = 'RM1600 → Untung RM3200'; }
-  else if(value === '3200'){ planText = 'RM3200 → Untung RM6400'; }
-  document.getElementById('selectedProfit').textContent = `Pelan dipilih: ${planText}`;
-  window.open(telegramLink, '_blank');
-});
+  showToast('Logged out');
+};
 </script>
+
 </body>
 </html>
