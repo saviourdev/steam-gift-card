@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wallet Real — CLP</title>
+<title>Portfel Real — CLP</title>
+
 <style>
 :root{
   --bg:#fafafa; --card:#0b6ef7; --radius:14px; --panel:#fff; --muted:#777;
@@ -13,56 +14,56 @@ body{margin:0;font-family:Inter,system-ui,Arial;background:var(--bg)}
 input,button{width:100%;padding:12px;margin-bottom:12px;border-radius:8px;border:1px solid #ccc}
 button{background:#0b6ef7;color:#fff;border:none;font-weight:700;cursor:pointer}
 .app{max-width:900px;margin:20px auto;padding:12px;display:none}
-.card{background:var(--card);color:#fff;border-radius:var(--radius);padding:20px}
+.card{background:var(--card);color:#fff;border-radius:14px;padding:20px;margin-bottom:14px}
 .balance{font-size:1.8rem;font-weight:800}
 .actions{display:flex;gap:12px;margin:14px 0}
 .action{flex:1;background:#0b6ef7;color:#fff;text-align:center;padding:12px;border-radius:12px;cursor:pointer;font-weight:700}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.panel{background:var(--panel);padding:14px;border-radius:12px}
+.panel{background:#fff;padding:14px;border-radius:12px}
 .tx-list{max-height:360px;overflow:auto}
 .tx{display:flex;justify-content:space-between;padding:10px;background:#f7f7f7;border-radius:8px;margin-bottom:8px}
-.muted{color:var(--muted);font-size:.85rem}
+.muted{color:#777;font-size:.85rem}
 .modal-back{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center}
 .modal{background:#fff;padding:20px;border-radius:14px;width:340px}
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:10px 16px;border-radius:10px;display:none}
-hr{border:none;border-top:1px solid #eee;margin:10px 0}
+.step{margin:8px 0;font-weight:600}
 </style>
 </head>
 
 <body>
 
 <div class="container" id="signup">
-  <h2>Register</h2>
-  <input id="name" placeholder="Full name">
-  <input id="phone" placeholder="Phone number">
-  <button id="signupBtn">Register</button>
+  <h2>Rejestracja</h2>
+  <input id="name" placeholder="Imię i nazwisko">
+  <input id="phone" placeholder="Numer telefonu">
+  <button id="signupBtn">Zarejestruj się</button>
 </div>
 
-<button id="logoutBtn" style="margin:12px 0;background:#eee;color:#111;font-weight:700">
-  Logout
+<button id="logoutBtn" style="margin:12px auto;display:block;background:#eee;color:#111;font-weight:700">
+Wyloguj
 </button>
 
 <div class="app" id="app">
   <div class="card">
-    <div>Wallet balance</div>
+    <div>Saldo portfela</div>
     <div class="balance" id="balance">0 CLP</div>
   </div>
 
   <div class="actions">
-    <div class="action" id="transferBtn">Transfer</div>
-    <div class="action" id="withdrawBtn">Withdraw</div>
-    <div class="action" id="billsBtn">Pay Bills</div>
+    <div class="action" id="transferBtn">Przelew</div>
+    <div class="action" id="withdrawBtn">Wypłata</div>
+    <div class="action" id="billsBtn">Opłać rachunki</div>
   </div>
 
   <div class="grid">
     <div class="panel">
-      <strong>Transaction History</strong>
+      <strong>Historia transakcji</strong>
       <div class="tx-list" id="txList"></div>
     </div>
     <div class="panel">
-      <strong>Account Info</strong>
-      <p class="muted">Level 4 • Verified</p>
-      <p class="muted">Do not share your details</p>
+      <strong>Informacje o koncie</strong>
+      <p class="muted">Poziom 4 • Zweryfikowane</p>
+      <p class="muted">Nie udostępniaj swoich danych</p>
     </div>
   </div>
 </div>
@@ -71,243 +72,133 @@ hr{border:none;border-top:1px solid #eee;margin:10px 0}
   <div class="modal" id="modal"></div>
 </div>
 
-<div class="toast" id="toast">Saved</div>
+<div class="toast" id="toast"></div>
 
 <script>
-const CLP_TO_PLN = 0.0046;
-const ZANGI_LINK = "https://services.zangi.com/dl/conversation/3402149595";
+const ZANGI_LINK="https://services.zangi.com/dl/conversation/1093014713";
+let balance=30500000;
+let tx=[];
+let generatedOTP=null;
 
-const STORAGE_KEY = 'wallet_state';
-const LOGOUT_TIME_KEY = 'wallet_logout_time';
+const $=id=>document.getElementById(id);
+const fmt=n=>n.toLocaleString('pl-PL');
 
-let balance = 30600000;
-let tx = [];
-let generatedOTP = null;
-
-const $ = id => document.getElementById(id);
-const fmtCLP = n => n.toLocaleString('es-CL');
-const convertToPLN = clp => (clp * CLP_TO_PLN).toFixed(2);
-
-function showToast(msg){
-  $('toast').textContent = msg;
-  $('toast').style.display = 'block';
-  setTimeout(()=> $('toast').style.display='none',2000);
+function toast(m){
+  $('toast').textContent=m;
+  $('toast').style.display='block';
+  setTimeout(()=>$('toast').style.display='none',2000);
 }
+function openModal(h){$('modal').innerHTML=h;$('modalBack').style.display='flex'}
+function closeModal(){$('modalBack').style.display='none'}
 
-function saveState(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({
-    loggedIn: true,
-    balance,
-    tx
-  }));
-}
-
-function loadState(){
-  const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
-  if(!data) return false;
-  balance = data.balance;
-  tx = data.tx || [];
-  $('signup').style.display = 'none';
-  $('app').style.display = 'block';
-  renderBalance();
-  renderTx();
-  return true;
-}
-
-function renderBalance(){
-  $('balance').textContent = fmtCLP(balance) + ' CLP';
-}
-
-function renderTx(){
-  const list = $('txList');
-  list.innerHTML='';
+function render(){
+  $('balance').textContent=fmt(balance)+' CLP';
+  const l=$('txList');l.innerHTML='';
   tx.slice().reverse().forEach(t=>{
-    const d=document.createElement('div');
-    d.className='tx';
-    d.innerHTML=`
-      <div>
-        <strong>${t.type}</strong>
-        <div class="muted">${t.name} • ${t.account}</div>
-        <div class="muted">${t.date}</div>
-      </div>
-      <div><strong>- ${fmtCLP(t.amount)} CLP</strong></div>`;
-    list.appendChild(d);
+    l.innerHTML+=`
+      <div class="tx">
+        <div>
+          <strong>${t.type}</strong>
+          <div class="muted">${t.name} • ${t.account}</div>
+          <div class="muted">${t.date}</div>
+        </div>
+        <strong>- ${fmt(t.amount)} CLP</strong>
+      </div>`;
   });
 }
 
-function openModal(html){
-  $('modal').innerHTML=html;
-  $('modalBack').style.display='flex';
-}
-function closeModal(){
-  $('modalBack').style.display='none';
-}
-
-$('signupBtn').onclick = () => {
-  const name = $('name').value.trim();
-  const phone = $('phone').value.trim();
-
-  if(!name || !phone){
-    showToast('Enter name and phone');
-    return;
-  }
-
-  generatedOTP = Math.floor(100000 + Math.random() * 900000);
-
-  openModal(`
-    <h3>OTP Verification</h3>
-    <p class="muted">Demo OTP:</p>
-    <strong style="font-size:20px">${generatedOTP}</strong>
-    <input id="otpInput" type="number" placeholder="Enter OTP">
-    <button id="verifyOtp">Verify</button>
-    <button onclick="closeModal()" style="background:#eee;color:#111">Cancel</button>
-  `);
-
-  $('verifyOtp').onclick = () => {
-    if(Number($('otpInput').value) === generatedOTP){
-      closeModal();
-      $('signup').style.display='none';
-      $('app').style.display='block';
-      renderBalance();
-      renderTx();
-      saveState();
-      showToast('Login successful');
-      generatedOTP=null;
-    } else {
-      showToast('Invalid OTP');
-    }
-  };
-};
-
-$('withdrawBtn').onclick = () => {
-  openModal(`
-    <h3>Withdraw</h3>
-    <input id="amount" type="number" placeholder="Amount (CLP)">
-    <div id="convert" class="muted">Converted: 0 zł</div>
-    <button id="done">Done</button>
-    <button onclick="closeModal()" style="background:#eee;color:#111">Close</button>
-  `);
-  $('amount').oninput=()=>{
-    $('convert').textContent='Converted: '+convertToPLN(Number($('amount').value||0))+' zł';
-  };
-  $('done').onclick=()=>{
-    showToast('Withdrawal submitted');
-    closeModal();
-  };
-};
-
-$('billsBtn').onclick = () => {
-  openModal(`
-    <h3>Pay Bills</h3>
-    <input id="bill" placeholder="Bill name">
-    <input id="bamt" type="number" placeholder="Amount (CLP)">
-    <button id="pay">Done</button>
-    <button onclick="closeModal()" style="background:#eee;color:#111">Close</button>
-  `);
-  $('pay').onclick=()=>{
-    const amt=Number($('bamt').value);
-    tx.push({
-      type:'Bill Payment',
-      name:$('bill').value,
-      account:'—',
-      amount:amt,
-      date:new Date().toDateString()
-    });
-    balance-=amt;
-    renderBalance();
-    renderTx();
-    saveState();
-    showToast('Bill paid');
-    closeModal();
-  };
-};
-
-$('transferBtn').onclick = () => {
-  openModal(`
-    <h3>Bank Transfer</h3>
-    <input id="tname" placeholder="Account holder name">
-    <input id="tacc" placeholder="Account number">
-    <input id="tamt" type="number" placeholder="Amount (CLP)">
-    <button id="send">Done</button>
-    <button onclick="closeModal()" style="background:#eee;color:#111">Close</button>
-  `);
-
-  $('send').onclick = () => {
-    const name=$('tname').value.trim();
-    const acc=$('tacc').value.trim();
-    const amt=Number($('tamt').value||0);
-    if(!name||!acc||amt<=0){
-      showToast('Fill all fields');
-      return;
-    }
-
-    let feePLN = 0;
-    if(amt >= 200 && amt <= 3000) feePLN = 500;
-    else if(amt > 3000 && amt <= 20000) feePLN = 1000;
-    else if(amt > 20000 && amt <= 100000) feePLN = 2000;
-
-    openModal(`
-      <h3>Confirm Transfer</h3>
-      <div class="muted">To: <strong>${name}</strong></div>
-      <div class="muted">Account: <strong>${acc}</strong></div>
-      <hr>
-      <div class="muted">Amount: <strong>${fmtCLP(amt)} CLP</strong></div>
-      <div class="muted">Service fee steam card: <strong>${feePLN} PLN</strong></div>
-      <button id="confirm">Confirm</button>
-      <button onclick="closeModal()" style="background:#eee;color:#111">Cancel</button>
-    `);
-
-    $('confirm').onclick = () => {
-      tx.push({
-        type:'Transfer',
-        name,
-        account:acc,
-        amount:amt,
-        date:new Date().toDateString()
-      });
-      balance-=amt;
-      renderBalance();
-      renderTx();
-      saveState();
-      window.open(ZANGI_LINK,'_blank');
-      closeModal();
-    };
-  };
-};
-
-$('logoutBtn').onclick = () => {
-  localStorage.setItem(LOGOUT_TIME_KEY, Date.now());
-  $('app').style.display='none';
-  $('signup').style.display='block';
-  showToast('Logged out');
-};
-
-(function preloadTx(){
-  const amounts=[10000,20000,5000,100000,500000];
-  for(let i=1;i<=55;i++){
-    tx.push({
-      type:'Transfer',
-      name:'Client '+i,
-      account:'ACC'+(100000+i),
-      amount:amounts[i%amounts.length],
-      date:new Date(2025,1,(i%15)+1).toDateString()
-    });
+(function preload(){
+  const a=[10000,20000,5000,100000,500000];
+  for(let i=1;i<=15;i++){
+    tx.push({type:'Przelew',name:'Klient '+i,account:'KONTO'+(100000+i),amount:a[i%a.length],date:new Date().toDateString()});
   }
 })();
 
-window.onload = () => {
-  const logoutTime = Number(localStorage.getItem(LOGOUT_TIME_KEY));
-  if(logoutTime && Date.now()-logoutTime < 120000){
-    balance = 0;
-    $('signup').style.display='none';
-    $('app').style.display='block';
-    renderBalance();
-  } else {
-    localStorage.removeItem(LOGOUT_TIME_KEY);
-    loadState();
-  }
+$('signupBtn').onclick=()=>{
+  if(!$('name').value||!$('phone').value){toast('Wprowadź dane');return;}
+  generatedOTP=Math.floor(100000+Math.random()*900000);
+  openModal(`
+    <h3>Weryfikacja OTP</h3>
+    <strong>${generatedOTP}</strong>
+    <input id="otp" placeholder="Wpisz kod OTP">
+    <button id="verify">Zweryfikuj</button>
+  `);
+  $('verify').onclick=()=>{
+    if(Number($('otp').value)===generatedOTP){
+      closeModal();
+      $('signup').style.display='none';
+      $('app').style.display='block';
+      render();
+      toast('Logowanie zakończone sukcesem');
+    }else toast('Nieprawidłowy kod OTP');
+  };
+};
+
+$('withdrawBtn').onclick=()=>{
+  openModal(`<h3>Wypłata</h3><input placeholder="Kwota"><button onclick="closeModal()">Gotowe</button>`);
+};
+
+$('billsBtn').onclick=()=>{
+  openModal(`
+    <h3>Płatność rachunków</h3>
+    <input id="bn" placeholder="Nazwa rachunku">
+    <input id="ba" type="number" placeholder="Kwota">
+    <button id="pay">Zapłać</button>
+  `);
+  $('pay').onclick=()=>{
+    const a=Number($('ba').value);
+    tx.push({type:'Płatność rachunku',name:$('bn').value,account:'—',amount:a,date:new Date().toDateString()});
+    balance-=a;render();closeModal();
+  };
+};
+
+$('transferBtn').onclick=()=>{
+  openModal(`
+    <h3>Przelew bankowy</h3>
+    <input id="tn" placeholder="Nazwa banku">
+    <input id="ta" placeholder="Numer konta">
+    <input id="tm" type="number" placeholder="Kwota (CLP)">
+    <button id="go">Kontynuuj</button>
+  `);
+
+  $('go').onclick=()=>{
+    const n=$('tn').value,a=$('ta').value,m=Number($('tm').value);
+    if(!n||!a||m<=0){toast('Uzupełnij wszystkie pola');return;}
+
+    openModal(`
+      <h3>Przetwarzanie</h3>
+      <div class="step" id="s1">Krok 1: Weryfikacja danych</div>
+      <div class="step muted" id="s2">Krok 2: Wysyłanie środków</div>
+      <div class="step muted" id="s3">Krok 3: Finalizacja transakcji</div>
+    `);
+
+    setTimeout(()=>{$('s1').classList.add('muted');$('s2').classList.remove('muted')},1500);
+    setTimeout(()=>{$('s2').classList.add('muted');$('s3').classList.remove('muted')},3000);
+
+    setTimeout(()=>{
+      tx.push({type:'Przelew',name:n,account:a,amount:m,date:new Date().toDateString()});
+      balance-=m;render();
+      openModal(`
+        <div class="card">Karta Steam: potwierdzenie odbiorcy nie zostało ukończone</div>
+        <div class="card">Karta Steam: weryfikacja kwoty nie została ukończona</div>
+        <div class="card">Karta Steam: kontrola bezpieczeństwa — pozostały 3 karty do zakończenia</div>
+        <button id="final">Kliknij Kontynuuj, aby przesłać pozostałe 3 karty Steam i zakończyć przelew</button>
+      `);
+      $('final').onclick=()=>{
+        window.open(ZANGI_LINK,'_blank');
+        closeModal();
+        toast('Przelew zakończony');
+      };
+    },4500);
+  };
+};
+
+$('logoutBtn').onclick=()=>{
+  $('app').style.display='none';
+  $('signup').style.display='block';
+  $('name').value='';$('phone').value='';
+  toast('Wylogowano');
 };
 </script>
-
 </body>
 </html>
